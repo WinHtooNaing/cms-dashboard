@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/sidebar"
 import { GalleryVerticalEndIcon } from "lucide-react"
 const teams = {
-  name: "Acme Inc",
+  name: "Tech Heaven",
   logo: <GalleryVerticalEndIcon />,
-  plan: "Enterprise",
+  plan: "admin dashboard",
 }
 
 export function Logo() {
