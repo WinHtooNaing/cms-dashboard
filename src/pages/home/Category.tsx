@@ -1,3 +1,4 @@
+import CategoryDialog from "@/components/home/CategoryDialog"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -6,19 +7,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ImagePlus, Pencil, Plus, Trash2 } from "lucide-react"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 
 type CategoryItem = {
   id: number
@@ -35,7 +34,7 @@ const initialCategories: CategoryItem[] = [
   },
   {
     id: 2,
-    name: "Macbook",
+    name: "Mac book",
     image:
       "https://anycallmobilemm.com/wp-content/uploads/2026/05/Macbook-Air-15-M5-Cover.webp",
   },
@@ -79,115 +78,58 @@ export default function Category() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="grid grid-cols-[70px_minmax(120px,1fr)_minmax(160px,2fr)_90px] gap-4 border-b bg-muted/30 px-6 py-3 text-xs font-medium text-muted-foreground">
-            <span>ID</span>
-            <span>Name</span>
-            <span>Image</span>
-            <span className="text-right">Actions</span>
-          </div>
-          <div className="divide-y">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="grid grid-cols-[70px_minmax(120px,1fr)_minmax(160px,2fr)_90px] items-center gap-4 px-6 py-4"
-              >
-                <span className="text-sm text-muted-foreground">
-                  {category.id}
-                </span>
-                <span className="font-medium">{category.name}</span>
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="h-14 w-24 rounded-md object-cover"
-                />
-                <div className="flex justify-end gap-1">
-                  <Dialog>
-                    <DialogTrigger
-                      render={<Button variant="ghost" size="icon-sm" />}
-                    >
-                      <Pencil />
-                      <span className="sr-only">Update {category.name}</span>
-                    </DialogTrigger>
-                    <CategoryDialog mode="update" category={category} />
-                  </Dialog>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`Delete ${category.name}`}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30 hover:bg-muted/30">
+                <TableHead>No</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Image</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categories.map((category, index) => (
+                <TableRow key={category.id}>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="font-medium">{category.name}</TableCell>
+                  <TableCell>
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="h-14 w-24 rounded-md object-cover"
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Dialog>
+                        <DialogTrigger
+                          render={<Button variant="ghost" size="icon-sm" />}
+                        >
+                          <Pencil />
+                          <span className="sr-only">
+                            Update {category.name}
+                          </span>
+                        </DialogTrigger>
+                        <CategoryDialog mode="update" category={category} />
+                      </Dialog>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Delete ${category.name}`}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-function CategoryDialog({
-  mode,
-  category,
-}: {
-  mode: "create" | "update"
-  category?: CategoryItem
-}) {
-  return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>
-          {mode === "create" ? "Create category" : "Update category"}
-        </DialogTitle>
-        <DialogDescription>
-          Category data contains only ID, name, and image.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-2">
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-id`}>ID</Label>
-          <Input
-            id={`${mode}-id`}
-            value={category?.id ?? "Auto generated"}
-            readOnly
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-name`}>Name</Label>
-          <Input
-            id={`${mode}-name`}
-            defaultValue={category?.name}
-            placeholder="Category name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-image`}>Image</Label>
-          <div className="flex items-center gap-3">
-            <div className="flex size-16 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-              {category?.image ? (
-                <img
-                  src={category.image}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              ) : (
-                <ImagePlus className="size-5 text-muted-foreground" />
-              )}
-            </div>
-            <Input
-              id={`${mode}-image`}
-              defaultValue={category?.image}
-              placeholder="Image URL"
-            />
-          </div>
-        </div>
-      </div>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-        <Button type="button">{mode === "create" ? "Create" : "Update"}</Button>
-      </DialogFooter>
-    </DialogContent>
   )
 }
