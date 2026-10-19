@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { ImagePlus } from "lucide-react"
 import { Button } from "../ui/button"
-import { categorySchema } from "@/schema/categorySchema"
+import { categorySchema } from "@/types/categorySchema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Controller, useForm } from "react-hook-form"

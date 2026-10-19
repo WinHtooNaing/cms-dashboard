@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
-import { loginSchema } from "@/schema/loginSchema"
+import { loginSchema } from "@/types/loginSchema"
 export function LoginForm({
   className,
   ...props
