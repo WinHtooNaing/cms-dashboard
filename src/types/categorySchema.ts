@@ -15,8 +15,8 @@ export const categorySchema = z.object({
       (files) =>
         !files ||
         files.length === 0 ||
-        ["image/jpeg", "image/png"].includes(files[0].type),
-      "Only JPG and PNG images are allowed"
+        ["image/jpeg", "image/png", "image/jpg"].includes(files[0].type),
+      "Only JPEG, JPG and PNG images are allowed"
     )
     .refine(
       (files) =>
