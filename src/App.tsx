@@ -1,13 +1,16 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 import Main from "./layouts/Main"
 import Login from "./pages/auth/Login"
-import Home from "./pages/Home"
-import Product from "./pages/Product"
-import ProductDetail from "./pages/ProductDetail"
-import About from "./pages/About"
-import Contact from "./pages/Contact"
 import Header from "./pages/Header"
 import Footer from "./pages/Footer"
+import ImageCarousel from "./pages/home/ImageCarousel"
+import Category from "./pages/home/Category"
+import RelatedProducts from "./pages/home/RelatedProducts"
+
+function SidebarPage({ title }: { title: string }) {
+  return <div>{title}</div>
+}
+
 export function App() {
   const router = createBrowserRouter([
     {
@@ -16,24 +19,57 @@ export function App() {
       children: [
         {
           index: true,
-          element: <Home />,
+          element: <Navigate to="/home" replace />,
+        },
+        {
+          path: "/home",
+          element: <ImageCarousel />,
+        },
+        {
+          path: "/home/category",
+          element: <Category />,
+        },
+        {
+          path: "/home/related-products",
+          element: <RelatedProducts />,
         },
         {
           path: "/products",
-          element: <Product />,
+          element: <SidebarPage title="Products" />,
         },
         {
-          path: "/product-detail",
-          element: <ProductDetail />,
+          path: "/products/detail",
+          element: <SidebarPage title="Product Detail" />,
         },
         {
           path: "/about",
-          element: <About />,
+          element: <SidebarPage title="About" />,
+        },
+        {
+          path: "/about-get-started",
+          element: <SidebarPage title="Get Started" />,
         },
         {
           path: "/contact",
-          element: <Contact />,
+          element: <SidebarPage title="Contact" />,
         },
+        {
+          path: "/contact/general",
+          element: <SidebarPage title="Contact: General" />,
+        },
+        {
+          path: "/contact/team",
+          element: <SidebarPage title="Contact: Team" />,
+        },
+        {
+          path: "/contact/billing",
+          element: <SidebarPage title="Contact: Billing" />,
+        },
+        {
+          path: "/contact/limits",
+          element: <SidebarPage title="Contact: Limits" />,
+        },
+
         {
           path: "/header",
           element: <Header />,
