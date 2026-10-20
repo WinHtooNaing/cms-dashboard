@@ -4,8 +4,18 @@ import {
   ImageIcon,
   RotateCcw,
   Save,
-  Upload,
 } from "lucide-react"
+import { toast } from "sonner"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Card,
   CardDescription,
@@ -20,6 +30,10 @@ import DEFAULT_LOGO from "../assets/logo/choosePhoto.png"
 const Header = () => {
   const REQUIRED_WIDTH = 300
   const REQUIRED_HEIGHT = 100
+  const [errorDialog, setErrorDialog] = useState<{
+    title: string
+    description: string
+  } | null>(null)
   const validateImageDimensions = (
     file: File
   ): Promise<{ valid: boolean; message: string }> => {
@@ -53,26 +67,31 @@ const Header = () => {
       image.src = imageURL
     })
   }
-  const [logo, setLogo] = useState(DEFAULT_LOGO)
+  const [logo, setLogo] = useState(CURRENT_LOGO)
   const [previewLogo, setPreviewLogo] = useState(DEFAULT_LOGO)
-  const [fileName, setFileName] = useState("logo.png")
+  const [fileName, setFileName] = useState("No file selected")
+  const [saved, setSaved] = useState(false)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const handleCancel = () => {
-    setPreviewLogo(logo)
-    setFileName(logo.split("/").pop() || DEFAULT_LOGO)
+    setPreviewLogo(DEFAULT_LOGO)
+    setFileName("No file selected")
     setSaved(false)
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }
+
   const handleSave = () => {
+    if (previewLogo === DEFAULT_LOGO) return
+
     setLogo(previewLogo)
     setSaved(true)
 
     alert("Logo updated successfully!")
   }
-  const [saved, setSaved] = useState(false)
+
   const handleLogoChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -82,14 +101,18 @@ const Header = () => {
 
     if (!file.type.startsWith("image/")) {
       alert("Please select a valid image file.")
+      event.target.value = ""
       return
     }
+
     const result = await validateImageDimensions(file)
+
     if (!result.valid) {
       alert(result.message)
       event.target.value = ""
       return
     }
+
     const imageUrl = URL.createObjectURL(file)
 
     setPreviewLogo(imageUrl)
@@ -100,7 +123,6 @@ const Header = () => {
     <div className="min-h-screen space-y-8 bg-background text-foreground">
       <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <p className="text-primary">Header</p>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-2xl">
             Header Management
           </h1>
@@ -127,56 +149,47 @@ const Header = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6 p-5 sm:p-6">
+          <CardContent className="space-y-6 p-5 sm:p-6 lg:pt-0">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Logo Preview</h3>
+                <h3 className="text-sm font-semibold">Logo Preview:</h3>
 
                 <span className="rounded-md border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
-                  Live Preview
+                  {previewLogo === DEFAULT_LOGO
+                    ? "Choose Logo"
+                    : "Preview Selected"}
                 </span>
               </div>
 
-              <div className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-xl border bg-muted/20 p-8">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleLogoChange}
+                className="hidden"
+                id="logo-upload"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative flex min-h-52 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed bg-muted/20 p-8 transition-colors hover:border-primary hover:bg-primary/5"
+                aria-label="Choose a new website logo"
+              >
                 <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-60" />
 
-                {previewLogo ? (
+                <div className="relative z-10 flex flex-col items-center gap-3">
                   <img
                     src={previewLogo}
                     alt="Website logo preview"
-                    className="relative z-10 max-h-32 max-w-full object-contain"
+                    className="max-h-32 max-w-full object-contain"
                   />
-                ) : (
-                  <div className="relative z-10 flex flex-col items-center gap-3 text-muted-foreground">
-                    <ImageIcon className="h-12 w-12" />
-                    <p className="text-sm">No logo selected</p>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold">Upload New Logo</h3>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="hidden"
-                  id="logo-upload"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-muted/20 p-8 text-center transition-colors hover:border-primary hover:bg-primary/5"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border bg-card text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <Upload className="h-5 w-5" />
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold">
-                      Click to upload your logo
+                  <div className="space-y-1 text-center">
+                    <p className="text-sm font-semibold transition-colors group-hover:text-primary">
+                      {previewLogo === DEFAULT_LOGO
+                        ? "Click to choose a logo"
+                        : "Click to change logo"}
                     </p>
 
                     <p className="text-xs text-muted-foreground">
@@ -188,70 +201,85 @@ const Header = () => {
                       Accepted formats: PNG, JPG, WebP
                     </p>
                   </div>
-                </button>
-
-                <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <FileImage className="h-5 w-5" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{fileName}</p>
-
-                    <p className="text-xs text-muted-foreground">
-                      Selected logo image
-                    </p>
-                  </div>
-                  {saved && (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-                  )}
                 </div>
-              </div>
-              <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={handleCancel}>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
+              </button>
 
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={previewLogo === logo}
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
+              <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                  <FileImage className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{fileName}</p>
+
+                  <p className="text-xs text-muted-foreground">
+                    {previewLogo === DEFAULT_LOGO
+                      ? "No logo selected"
+                      : "Selected logo image"}
+                  </p>
+                </div>
+
+                {saved && (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
+                )}
               </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={handleCancel}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={previewLogo === DEFAULT_LOGO || saved}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-muted/30">
             <CardTitle className="text-lg">Current Logo</CardTitle>
 
             <CardDescription>
               Overview of your website current logo
             </CardDescription>
           </CardHeader>
-
           <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold">Current Logo Preview:</h3>
+            </div>
             <div className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-xl border bg-muted/20 p-8">
               <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-60" />
 
-              {previewLogo ? (
-                <img
-                  src={CURRENT_LOGO}
-                  alt="Current Website logo preview"
-                  className="relative z-10 max-h-32 max-w-full object-contain"
-                />
-              ) : (
-                <div className="relative z-10 flex flex-col items-center gap-3 text-muted-foreground">
-                  <ImageIcon className="h-12 w-12" />
-                  <p className="text-sm">No logo selected</p>
-                </div>
-              )}
+              <img
+                src={logo}
+                alt="Current website logo"
+                className="relative z-10 max-h-32 max-w-full object-contain"
+              />
             </div>
+
+            {/* <div className="flex flex-col-reverse gap-3 border-t pt-5 text-center sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={handleCancel}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={previewLogo === DEFAULT_LOGO || saved}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div> */}
           </CardContent>
         </Card>
       </div>

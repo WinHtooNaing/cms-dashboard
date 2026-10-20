@@ -6,6 +6,7 @@ import Footer from "./pages/Footer"
 import ImageCarousel from "./pages/home/ImageCarousel"
 import Category from "./pages/home/Category"
 import RelatedProducts from "./pages/home/RelatedProducts"
+import { Toaster } from "./components/ui/sonner"
 
 function SidebarPage({ title }: { title: string }) {
   return <div>{title}</div>
@@ -85,7 +86,11 @@ export function App() {
       element: <Login />,
     },
   ])
-  return <RouterProvider router={router} />
+  return
+  ;<>
+    <RouterProvider router={router} />
+    <Toaster position="top-right" richColors />
+  </>
 }
 
 export default App
