@@ -60,7 +60,11 @@ export default function CategoryDialog({
             render={({ field, fieldState }) => (
               <Field>
                 <FieldLabel>Name</FieldLabel>
-                <Input {...field} placeholder="Category name" />
+                <Input
+                  {...field}
+                  placeholder="Category name"
+                  className={`${fieldState.error && "border-red-500"}`}
+                />
                 {fieldState.error && (
                   <FieldError>{fieldState.error.message}</FieldError>
                 )}
@@ -105,6 +109,7 @@ export default function CategoryDialog({
                     type="file"
                     accept="image/*"
                     onChange={(e) => onChange(e.target.files)}
+                    className={`${fieldState.error && "border-red-500"}`}
                   />
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>

@@ -1,5 +1,3 @@
-import { cn } from "cn"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -19,10 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { loginSchema } from "@/types/loginSchema"
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -34,7 +29,7 @@ export function LoginForm({
     console.log(data)
   }
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div>
       <Card>
         <CardHeader>
           <CardTitle className="font-bold text-primary">
@@ -60,6 +55,7 @@ export function LoginForm({
                       id="email"
                       type="email"
                       placeholder="m@example.com"
+                      className={`${fieldState.invalid ? "border-red-500" : ""}`}
                     />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -77,7 +73,13 @@ export function LoginForm({
                         Password
                       </FieldLabel>
                     </div>
-                    <Input {...field} id="password" type="password" />
+
+                    <Input
+                      {...field}
+                      id="password"
+                      type="password"
+                      className={`${fieldState.invalid ? "border-red-500" : ""}`}
+                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

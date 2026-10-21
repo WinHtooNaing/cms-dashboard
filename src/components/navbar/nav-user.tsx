@@ -14,7 +14,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, BadgeCheckIcon, LogOutIcon } from "lucide-react"
+import { ChevronsUpDownIcon, LogOutIcon, Settings } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function NavUser({
   user,
@@ -69,8 +70,10 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <BadgeCheckIcon />
-                Account
+                <Link to="/settings" className="flex gap-2">
+                  <Settings />
+                  Settings
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
