@@ -1,13 +1,6 @@
-import {
-  CheckCircle2,
-  FileImage,
-  ImageIcon,
-  LoaderCircle,
-  RotateCcw,
-  Save,
-} from "lucide-react"
+import { FileImage, ImageIcon, LoaderCircle } from "lucide-react"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -25,29 +18,26 @@ import CURRENT_LOGO from "../assets/logo/logo.png"
 import DEFAULT_LOGO from "../assets/logo/choosePhoto.png"
 
 import { headerSchema, type HeaderFormValues } from "@/types/headerSchema"
+import { Input } from "@/components/ui/input"
 
 const REQUIRED_WIDTH = 300
 const REQUIRED_HEIGHT = 100
 
 const Header = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewUrlRef = useRef<string | null>(null)
 
-  const [currentLogo, setCurrentLogo] = useState(CURRENT_LOGO)
   const [previewLogo, setPreviewLogo] = useState<string | null>(null)
   const [fileName, setFileName] = useState("No file selected")
-  const [saved, setSaved] = useState(false)
-
-  const previewUrlRef = useRef<string | null>(null)
-  const savedUrlRef = useRef<string | null>(null)
 
   const {
     register,
-    handleSubmit,
     setValue,
     reset,
     watch,
     clearErrors,
-    formState: { errors, isSubmitting, isValidating },
+    trigger,
+    formState: { errors, isValidating },
   } = useForm<HeaderFormValues>({
     resolver: zodResolver(headerSchema),
     mode: "onChange",
@@ -60,6 +50,14 @@ const Header = () => {
   const selectedFile = watch("logoFile")
 
   const displayedPreview = previewLogo ?? DEFAULT_LOGO
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current)
+      }
+    }
+  }, [])
 
   const handleLogoChange = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -74,7 +72,6 @@ const Header = () => {
     }
 
     clearErrors("logoFile")
-    setSaved(false)
 
     setValue("logoFile", file, {
       shouldDirty: true,
@@ -87,36 +84,11 @@ const Header = () => {
 
     previewUrlRef.current = imageUrl
     setPreviewLogo(imageUrl)
+
+    await trigger("logoFile")
   }
 
   const handleCancel = () => {
-    setPreviewLogo(null)
-    setFileName("No file selected")
-    setSaved(false)
-
-    reset({
-      logoFile: undefined,
-    })
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
-  }
-
-  const handleSave = async (data: HeaderFormValues) => {
-    const file = data.logoFile
-
-    const imageUrl = URL.createObjectURL(file)
-
-    if (savedUrlRef.current) {
-      URL.revokeObjectURL(savedUrlRef.current)
-    }
-
-    savedUrlRef.current = imageUrl
-
-    setCurrentLogo(imageUrl)
-    setSaved(true)
-
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current)
       previewUrlRef.current = null
@@ -143,6 +115,10 @@ const Header = () => {
           <h1 className="text-2xl font-semibold tracking-tight">
             Header Management
           </h1>
+
+          <p className="text-sm text-muted-foreground">
+            Preview and validate your website logo.
+          </p>
         </div>
 
         <div className="flex w-fit items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm">
@@ -164,22 +140,23 @@ const Header = () => {
                 <CardTitle className="text-xl">Website Logo</CardTitle>
 
                 <CardDescription>
-                  Upload and manage your website logo.
+                  Select an image and check whether it meets the logo
+                  requirements.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6 p-5 pt-0 sm:p-6 sm:pt-0">
-            <div className="flex items-center justify-between">
+          <CardContent className="space-y-6 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold">Logo Preview</h3>
 
               <span className="rounded-md border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
-                {previewLogo ? "Preview Selected" : "Choose Logo"}
+                {previewLogo ? "Selected Image" : "No Image Selected"}
               </span>
             </div>
 
-            <input
+            <Input
               {...fileInputProps}
               ref={(element) => {
                 registeredRef(element)
@@ -192,12 +169,12 @@ const Header = () => {
               id="logo-upload"
             />
 
-            <button
+            <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isValidating || isSubmitting}
+              disabled={isValidating}
               className="group relative flex min-h-52 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed bg-muted/20 p-6 transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-70"
-              aria-label="Choose a new website logo"
+              aria-label="Choose a website logo"
             >
               <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-60" />
 
@@ -207,7 +184,7 @@ const Header = () => {
                 ) : (
                   <img
                     src={displayedPreview}
-                    alt="Website logo preview"
+                    alt="Selected website logo preview"
                     className="h-auto max-h-32 w-auto max-w-full object-contain"
                   />
                 )}
@@ -217,8 +194,8 @@ const Header = () => {
                     {isValidating
                       ? "Validating image..."
                       : previewLogo
-                        ? "Click to change logo"
-                        : "Click to choose a logo"}
+                        ? "Click to change image"
+                        : "Click to choose an image"}
                   </p>
 
                   <p className="text-xs text-muted-foreground">
@@ -230,7 +207,7 @@ const Header = () => {
                   </p>
                 </div>
               </div>
-            </button>
+            </Button>
 
             {errors.logoFile && (
               <div
@@ -264,44 +241,20 @@ const Header = () => {
                 <p className="text-xs text-muted-foreground">
                   {selectedFile
                     ? `${(selectedFile.size / 1024).toFixed(1)} KB`
-                    : "No logo selected"}
+                    : "No image selected"}
                 </p>
               </div>
-
-              {saved && (
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-              )}
             </div>
 
-            <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting || isValidating}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Cancel
+            <div className="flex justify-end gap-1.5 border-t pt-5">
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Clear Selection
               </Button>
-
               <Button
+                disabled={!selectedFile || !!errors.logoFile || isValidating}
                 type="button"
-                onClick={handleSubmit(handleSave)}
-                disabled={
-                  !selectedFile ||
-                  !!errors.logoFile ||
-                  saved ||
-                  isSubmitting ||
-                  isValidating
-                }
               >
-                {isSubmitting ? (
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                Save Logo
               </Button>
             </div>
           </CardContent>
@@ -312,35 +265,21 @@ const Header = () => {
             <CardTitle className="text-lg">Current Logo</CardTitle>
 
             <CardDescription>
-              Preview of the currently saved logo.
+              Preview of the logo currently used by the website.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-4 p-5 sm:p-6 sm:pt-3.5">
+          <CardContent className="space-y-4 p-5 sm:p-6">
             <h3 className="text-sm font-semibold">Current Logo Preview</h3>
 
             <div className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-xl border bg-muted/20 p-6">
               <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-60" />
 
               <img
-                src={currentLogo}
+                src={CURRENT_LOGO}
                 alt="Current website logo"
                 className="relative z-10 h-auto max-h-32 w-auto max-w-full object-contain"
               />
-            </div>
-
-            <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Current logo</p>
-
-                <p className="text-xs text-muted-foreground">
-                  {saved
-                    ? "Your logo has been updated in the current dashboard session."
-                    : "This is the logo currently displayed in the dashboard."}
-                </p>
-              </div>
             </div>
           </CardContent>
         </Card>

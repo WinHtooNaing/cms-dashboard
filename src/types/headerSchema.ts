@@ -7,7 +7,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ACCEPTED_TYPES = [
   "image/png",
   "image/jpeg",
-  "image/jpg",
+  "image/webP",
 ]
 
 const validateImageDimensions = (
