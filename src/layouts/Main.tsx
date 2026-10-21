@@ -45,7 +45,7 @@ export default function Main() {
           </div>
         </header>
 
-        <div className="p-4">
+        <div className="px-4">
           <Outlet />
         </div>
       </SidebarInset>

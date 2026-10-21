@@ -1,108 +1,101 @@
-import { Button } from "@/components/ui/button"
-import {
-  ExternalLink,
-  FileText,
-  Headset,
-  LinkIcon,
-  Mail,
-  Pencil,
-  Plus,
-} from "lucide-react"
+import { useState } from "react"
 
-const Footer = () => {
+import FooterDescription from "@/components/footer/FooterDescription"
+
+import type {
+  FooterDescriptionValues,
+  SupportLinksValues,
+  FooterContactValues,
+  SocialLinksValues,
+} from "@/types/footerSchema"
+import FooterSocialLinks from "@/components/footer/FooterSocialLinks"
+import FooterContact from "@/components/footer/FooterContact"
+import FooterSupportLinks from "@/components/footer/FooterSupportLinks"
+
+type ActiveDialog = "description" | "support" | "contact" | "social" | null
+
+const FooterManagement = () => {
+  const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null)
+
+  const [description, setDescription] = useState<
+    FooterDescriptionValues["description"]
+  >(
+    "Discover quality electronics, explore the latest products, and find the right technology for your needs."
+  )
+
+  const [supportLinks, setSupportLinks] = useState<
+    SupportLinksValues["supportLinks"]
+  >([
+    { id: 1, name: "Help Center", path: "/contact" },
+    { id: 2, name: "FAQs", path: "/contact" },
+    { id: 3, name: "Shipping Information", path: "/contact" },
+    { id: 4, name: "Returns & Refunds", path: "/contact" },
+  ])
+
+  const [contact, setContact] = useState<FooterContactValues>({
+    email: "support@techhaven.com",
+    phone: "+95 9 123 456 789",
+    address: "Yangon, Myanmar",
+  })
+
+  const [socialLinks, setSocialLinks] = useState<
+    SocialLinksValues["socialLinks"]
+  >([
+    {
+      id: 1,
+      name: "Facebook",
+      url: "https://www.facebook.com/",
+    },
+    {
+      id: 2,
+      name: "Instagram",
+      url: "https://www.instagram.com/",
+    },
+    {
+      id: 3,
+      name: "GitHub",
+      url: "https://github.com/",
+    },
+  ])
+
   return (
-    <div className="lg:p- min-h-screen space-y-6 bg-background p-4 md:p-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Footer Management
-            </h1>
-          </div>
+    <div className="space-y-8 p-4 sm:p-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Footer Management</h1>
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            Manage the content displayed in your website footer.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="h-2 w-2 rounded-full bg-primary" />
-          Footer Settings
-        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your website footer description, support links, contact
+          information, and social media.
+        </p>
       </div>
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          MANAGE FOOTER CONTENT
-        </h2>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Button
-            variant="outline"
-            className="h-auto justify-start gap-3 px-4 py-4"
-          >
-            <FileText className="h-5 w-5 shrink-0 text-primary" />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <FooterDescription
+          description={description}
+          open={activeDialog === "description"}
+          onOpenChange={(open) => setActiveDialog(open ? "description" : null)}
+        />
 
-            <span className="text-left">
-              <span className="block font-semibold">Description</span>
-              <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                Edit website text
-              </span>
-            </span>
+        <FooterSupportLinks
+          links={supportLinks}
+          open={activeDialog === "support"}
+          onOpenChange={(open) => setActiveDialog(open ? "support" : null)}
+        />
 
-            <Pencil className="ml-auto h-4 w-4 text-muted-foreground" />
-          </Button>
+        <FooterContact
+          contact={contact}
+          open={activeDialog === "contact"}
+          onOpenChange={(open) => setActiveDialog(open ? "contact" : null)}
+        />
 
-          <Button
-            variant="outline"
-            className="h-auto justify-start gap-3 px-4 py-4"
-          >
-            <Headset className="h-5 w-5 shrink-0 text-primary" />
-
-            <span className="text-left">
-              <span className="block font-semibold">Support Links</span>
-              <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                links
-              </span>
-            </span>
-
-            <Plus className="ml-auto h-4 w-4 text-muted-foreground" />
-          </Button>
-
-          <Button
-            variant="outline"
-            className="h-auto justify-start gap-3 px-4 py-4"
-          >
-            <Mail className="h-5 w-5 shrink-0 text-primary" />
-
-            <span className="text-left">
-              <span className="block font-semibold">Contact Info</span>
-              <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                Email, phone,...
-              </span>
-            </span>
-
-            <Pencil className="ml-auto h-4 w-4 text-muted-foreground" />
-          </Button>
-
-          <Button
-            variant="outline"
-            className="h-auto justify-start gap-3 px-4 py-4"
-          >
-            <LinkIcon className="h-5 w-5 shrink-0 text-primary" />
-
-            <span className="text-left">
-              <span className="block font-semibold">Social Links</span>
-              <span className="mt-1 block text-xs font-normal text-muted-foreground">
-                platforms
-              </span>
-            </span>
-
-            <Plus className="ml-auto h-4 w-4 text-muted-foreground" />
-          </Button>
-        </div>
-      </section>
+        <FooterSocialLinks
+          links={socialLinks}
+          open={activeDialog === "social"}
+          onOpenChange={(open) => setActiveDialog(open ? "social" : null)}
+        />
+      </div>
     </div>
   )
 }
 
-export default Footer
+export default FooterManagement

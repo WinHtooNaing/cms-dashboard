@@ -86,11 +86,11 @@ export function App() {
       element: <Login />,
     },
   ])
-  return
-  ;<>
-    <RouterProvider router={router} />
-    <Toaster position="top-right" richColors />
-  </>
+  return (
+    <>
+      <RouterProvider router={router} />
+    </>
+  )
 }
 
 export default App
