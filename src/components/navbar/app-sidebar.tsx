@@ -35,8 +35,8 @@ const data = {
           url: "/home/category",
         },
         {
-          title: "Related Products",
-          url: "/home/related-products",
+          title: "New Collection",
+          url: "/home/new-collection",
         },
       ],
     },
@@ -48,10 +48,6 @@ const data = {
         {
           title: "products",
           url: "/products",
-        },
-        {
-          title: "Product Detail",
-          url: "/products/detail",
         },
       ],
     },

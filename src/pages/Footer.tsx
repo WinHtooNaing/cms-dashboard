@@ -1,13 +1,5 @@
 import { Button } from "@/components/ui/button"
-import {
-  ExternalLink,
-  FileText,
-  Headset,
-  LinkIcon,
-  Mail,
-  Pencil,
-  Plus,
-} from "lucide-react"
+import { FileText, Headset, LinkIcon, Mail, Pencil, Plus } from "lucide-react"
 
 const Footer = () => {
   return (

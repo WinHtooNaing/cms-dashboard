@@ -5,17 +5,7 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react"
-import { toast } from "sonner"
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import {
   Card,
   CardDescription,
@@ -30,10 +20,7 @@ import DEFAULT_LOGO from "../assets/logo/choosePhoto.png"
 const Header = () => {
   const REQUIRED_WIDTH = 300
   const REQUIRED_HEIGHT = 100
-  const [errorDialog, setErrorDialog] = useState<{
-    title: string
-    description: string
-  } | null>(null)
+
   const validateImageDimensions = (
     file: File
   ): Promise<{ valid: boolean; message: string }> => {

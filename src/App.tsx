@@ -5,9 +5,10 @@ import Header from "./pages/Header"
 import Footer from "./pages/Footer"
 import ImageCarousel from "./pages/home/ImageCarousel"
 import Category from "./pages/home/Category"
-import RelatedProducts from "./pages/home/RelatedProducts"
-import { Toaster } from "./components/ui/sonner"
-
+import Products from "./pages/products/Products"
+import ProductView from "./components/products/ProductView"
+import NewCollection from "./pages/home/NewCollection"
+import Settings from "./pages/auth/Settings"
 function SidebarPage({ title }: { title: string }) {
   return <div>{title}</div>
 }
@@ -31,16 +32,16 @@ export function App() {
           element: <Category />,
         },
         {
-          path: "/home/related-products",
-          element: <RelatedProducts />,
+          path: "/home/new-collection",
+          element: <NewCollection />,
         },
         {
           path: "/products",
-          element: <SidebarPage title="Products" />,
+          element: <Products />,
         },
         {
-          path: "/products/detail",
-          element: <SidebarPage title="Product Detail" />,
+          path: "/products/:id",
+          element: <ProductView />,
         },
         {
           path: "/about",
@@ -79,6 +80,10 @@ export function App() {
           path: "/footer",
           element: <Footer />,
         },
+        {
+          path: "/settings",
+          element: <Settings />,
+        },
       ],
     },
     {
@@ -86,11 +91,7 @@ export function App() {
       element: <Login />,
     },
   ])
-  return
-  ;<>
-    <RouterProvider router={router} />
-    <Toaster position="top-right" richColors />
-  </>
+  return <RouterProvider router={router} />
 }
 
 export default App
