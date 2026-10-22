@@ -9,18 +9,12 @@ import {
   type SupportLinksValues,
 } from "@/types/footerSchema"
 
-import FieldError from "./FieldError"
+import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -77,8 +71,6 @@ const FooterSupportLinks = ({
 
             <div>
               <CardTitle>Support Links</CardTitle>
-
-              <CardDescription>Manage customer support links.</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -125,11 +117,11 @@ const FooterSupportLinks = ({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      disabled={fields.length <= 1}
-                      onClick={() => remove(index)}
-                      aria-label={`Delete support link ${index + 1}`}
+                      title="Delete content"
+                      aria-label={`Delete ${field.name}`}
+                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
 

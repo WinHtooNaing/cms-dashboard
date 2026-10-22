@@ -61,12 +61,24 @@ const data = {
       icon: Bot,
       items: [
         {
-          title: "content",
-          url: "/about",
+          title: "Description",
+          url: "/about/description",
         },
         {
-          title: "Get Started",
-          url: "/about-get-started",
+          title: "Who We Are",
+          url: "/about/whoweare",
+        },
+        {
+          title: "Our Purposes",
+          url: "/about/ourpurposes",
+        },
+        {
+          title: "Core Values",
+          url: "/about/corevalues",
+        },
+        {
+          title: "Why Choose Us",
+          url: "/about/whychooseus",
         },
       ],
     },
@@ -76,20 +88,8 @@ const data = {
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "/contact/general",
-        },
-        {
-          title: "Team",
-          url: "/contact/team",
-        },
-        {
-          title: "Billing",
-          url: "/contact/billing",
-        },
-        {
-          title: "Limits",
-          url: "/contact/limits",
+          title: "Contack Description",
+          url: "/contact/description",
         },
       ],
     },

@@ -29,9 +29,9 @@ const footerUrlSchema = z
     },
   )
 
-// --------------------------------------------------
+
 // Footer description
-// --------------------------------------------------
+
 
 export const footerDescriptionSchema = z.object({
   description: z
@@ -45,9 +45,9 @@ export type FooterDescriptionValues = z.infer<
   typeof footerDescriptionSchema
 >;
 
-// --------------------------------------------------
+
 // Support links
-// --------------------------------------------------
+
 
 export const supportLinkSchema = z.object({
   id: z.number(),
@@ -70,9 +70,9 @@ export type SupportLinksValues = z.infer<
   typeof supportLinksSchema
 >
 
-// --------------------------------------------------
+
 // Contact information
-// --------------------------------------------------
+
 
 export const footerContactSchema = z.object({
   email: z

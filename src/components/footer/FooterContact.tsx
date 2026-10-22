@@ -9,18 +9,12 @@ import {
   type FooterContactValues,
 } from "@/types/footerSchema"
 
-import FieldError from "./FieldError"
+import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -65,10 +59,6 @@ const FooterContact = ({ contact, open, onOpenChange }: FooterContactProps) => {
 
             <div>
               <CardTitle>Contact Information</CardTitle>
-
-              <CardDescription>
-                Manage your business contact details.
-              </CardDescription>
             </div>
           </div>
         </CardHeader>

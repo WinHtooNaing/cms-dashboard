@@ -6,7 +6,12 @@ import Footer from "./pages/Footer"
 import ImageCarousel from "./pages/home/ImageCarousel"
 import Category from "./pages/home/Category"
 import RelatedProducts from "./pages/home/RelatedProducts"
-import { Toaster } from "./components/ui/sonner"
+import ContactDescription from "./pages/contact/ContactDescription"
+import Description from "./pages/about/Description"
+import WhoWeAre from "./pages/about/WhoWeAre"
+import OurPurposes from "./pages/about/OurPurposes"
+import CoreValues from "./pages/about/CoreValues"
+import WhyChooseUs from "./pages/about/WhyChooseUs"
 
 function SidebarPage({ title }: { title: string }) {
   return <div>{title}</div>
@@ -43,34 +48,29 @@ export function App() {
           element: <SidebarPage title="Product Detail" />,
         },
         {
-          path: "/about",
-          element: <SidebarPage title="About" />,
+          path: "/about/description",
+          element: <Description />,
         },
         {
-          path: "/about-get-started",
-          element: <SidebarPage title="Get Started" />,
+          path: "/about/whoweare",
+          element: <WhoWeAre />,
         },
         {
-          path: "/contact",
-          element: <SidebarPage title="Contact" />,
+          path: "/about/ourpurposes",
+          element: <OurPurposes />,
         },
         {
-          path: "/contact/general",
-          element: <SidebarPage title="Contact: General" />,
+          path: "/about/corevalues",
+          element: <CoreValues />,
         },
         {
-          path: "/contact/team",
-          element: <SidebarPage title="Contact: Team" />,
+          path: "/about/whychooseus",
+          element: <WhyChooseUs />,
         },
         {
-          path: "/contact/billing",
-          element: <SidebarPage title="Contact: Billing" />,
+          path: "/contact/description",
+          element: <ContactDescription />,
         },
-        {
-          path: "/contact/limits",
-          element: <SidebarPage title="Contact: Limits" />,
-        },
-
         {
           path: "/header",
           element: <Header />,

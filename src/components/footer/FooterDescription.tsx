@@ -9,17 +9,11 @@ import {
   type FooterDescriptionValues,
 } from "@/types/footerSchema"
 
-import FieldError from "./FieldError"
+import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -74,10 +68,6 @@ const FooterDescription = ({
 
             <div>
               <CardTitle>Footer Description</CardTitle>
-
-              <CardDescription>
-                Manage your footer introduction.
-              </CardDescription>
             </div>
           </div>
         </CardHeader>

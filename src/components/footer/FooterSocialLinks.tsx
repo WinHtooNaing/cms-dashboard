@@ -6,18 +6,12 @@ import { Link as LinkIcon, Plus, Share2, Trash2 } from "lucide-react"
 
 import { socialLinksSchema, type SocialLinksValues } from "@/types/footerSchema"
 
-import FieldError from "./FieldError"
+import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -74,10 +68,6 @@ const FooterSocialLinks = ({
 
             <div>
               <CardTitle>Social Media Links</CardTitle>
-
-              <CardDescription>
-                Manage your social media profiles.
-              </CardDescription>
             </div>
           </div>
         </CardHeader>
