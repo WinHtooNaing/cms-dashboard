@@ -17,7 +17,19 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { loginSchema } from "@/types/loginSchema"
+import { login } from "@/api/auth"
+import { useState } from "react"
+import { toast } from "sonner"
+import { useLocation, useNavigate } from "react-router-dom"
+import { useAuthStore } from "@/store/useAuthStore"
 export function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const setAuth = useAuthStore((state) => state.setAuth)
+
+  const redirectPath = location.state?.from?.pathname || "/"
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -25,8 +37,28 @@ export function LoginForm() {
       password: "",
     },
   })
-  function onSubmit(data: z.infer<typeof loginSchema>) {
-    console.log(data)
+
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    try {
+      setIsLoading(true)
+      const response = await login(data)
+
+      if (response.isSuccess) {
+        toast.success(response.message)
+        localStorage.setItem("token", response.accessToken)
+
+        setAuth(response.accessToken, response.user || null)
+        setIsLoading(false)
+
+        navigate(redirectPath, { replace: true })
+      } else {
+        throw new Error(response.message)
+      }
+      setIsLoading(false)
+    } catch (error: any) {
+      toast.error(error.message)
+      setIsLoading(false)
+    }
   }
   return (
     <div>
@@ -88,8 +120,12 @@ export function LoginForm() {
               />
 
               <Field>
-                <Button type="submit" className="cursor-pointer py-5">
-                  Login
+                <Button
+                  type="submit"
+                  className="cursor-pointer py-5"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Loginning..." : "Login"}
                 </Button>
               </Field>
             </FieldGroup>
