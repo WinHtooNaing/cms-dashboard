@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { FileText, Pencil, Eye, Plus, Trash2 } from "lucide-react"
+import { FileText, Pencil, Eye } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -25,17 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 import AboutPageHeader from "@/components/about/AboutPageHeader"
 import FieldError from "@/components/error/FieldError"
@@ -89,8 +78,6 @@ const WhoWeArePage = () => {
   const [featureOpen, setFeatureOpen] = useState(false)
   const [featureMode, setFeatureMode] = useState<DialogMode>("add")
 
-  const [deleteOpen, setDeleteOpen] = useState(false)
-
   const {
     register,
     reset,
@@ -124,16 +111,6 @@ const WhoWeArePage = () => {
     setSectionMode("view")
     reset(defaultValues)
     setSectionOpen(true)
-  }
-
-  const openAddFeature = () => {
-    setFeatureMode("add")
-
-    resetFeature({
-      title: "",
-    })
-
-    setFeatureOpen(true)
   }
 
   const openViewFeature = (feature: Feature) => {
@@ -281,11 +258,6 @@ const WhoWeArePage = () => {
               Manage the three features shown in the Who We Are section.
             </p>
           </div>
-
-          <Button type="button" onClick={openAddFeature}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Feature
-          </Button>
         </div>
 
         <CardContent className="p-0">
@@ -332,18 +304,6 @@ const WhoWeArePage = () => {
                         onClick={() => openEditFeature(feature)}
                       >
                         <Pencil className="h-4 w-4" />
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        title="Delete feature"
-                        aria-label={`Delete ${feature.title}`}
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => setDeleteOpen(true)}
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -479,14 +439,6 @@ const WhoWeArePage = () => {
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>
-              {featureMode === "add"
-                ? "Add Feature"
-                : featureMode === "edit"
-                  ? "Edit Feature"
-                  : "View Feature"}
-            </DialogTitle>
-
             <DialogDescription>
               {featureMode === "view"
                 ? "Review the selected feature."
@@ -520,37 +472,10 @@ const WhoWeArePage = () => {
               >
                 Close
               </Button>
-
-              {featureMode !== "view" && (
-                <Button type="button">
-                  {featureMode === "add" ? "Add Feature" : "Save Changes"}
-                </Button>
-              )}
             </div>
           </form>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Feature?</AlertDialogTitle>
-
-            <AlertDialogDescription>Are You Sure!!!</AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-            <AlertDialogAction
-              onClick={() => setDeleteOpen(false)}
-              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-            >
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { Button } from "@/components/ui/button"
 
-import { Eye, Pencil, Trash2 } from "lucide-react"
+import { Eye, Pencil } from "lucide-react"
 
 import type {
   FooterDescriptionValues,
@@ -29,10 +29,13 @@ type FooterContentTableProps = {
   supportLinks: SupportLinksValues["supportLinks"]
   contact: FooterContactValues
   socialLinks: SocialLinksValues["socialLinks"]
-
-  onOpenDialog: (type: FooterDialogType) => void
+  onOpenDialog: (
+    type: FooterDialogType,
+    item?:
+      | SupportLinksValues["supportLinks"][number]
+      | SocialLinksValues["socialLinks"][number]
+  ) => void
   onView: (type: FooterDialogType) => void
-  onDelete: (type: FooterDialogType) => void
 }
 
 const FooterContentTable = ({
@@ -42,7 +45,6 @@ const FooterContentTable = ({
   socialLinks,
   onOpenDialog,
   onView,
-  onDelete,
 }: FooterContentTableProps) => {
   return (
     <Tabs defaultValue="description" className="space-y-4">
@@ -158,9 +160,7 @@ const FooterContentTable = ({
                     <TableCell>
                       <ActionButtons
                         onView={() => onView("support")}
-                        onEdit={() => onOpenDialog("support")}
-                        onDelete={() => onDelete("support")}
-                        showDelete
+                        onEdit={() => onOpenDialog("support", link)}
                       />
                     </TableCell>
                   </TableRow>
@@ -267,9 +267,7 @@ const FooterContentTable = ({
                     <TableCell>
                       <ActionButtons
                         onView={() => onView("social")}
-                        onEdit={() => onOpenDialog("social")}
-                        onDelete={() => onDelete("social")}
-                        showDelete
+                        onEdit={() => onOpenDialog("social", link)}
                       />
                     </TableCell>
                   </TableRow>
@@ -286,16 +284,9 @@ const FooterContentTable = ({
 type ActionButtonsProps = {
   onView: () => void
   onEdit: () => void
-  onDelete?: () => void
-  showDelete?: boolean
 }
 
-const ActionButtons = ({
-  onView,
-  onEdit,
-  onDelete,
-  showDelete = false,
-}: ActionButtonsProps) => {
+const ActionButtons = ({ onView, onEdit }: ActionButtonsProps) => {
   return (
     <div className="flex justify-end gap-1">
       <Button
@@ -319,20 +310,6 @@ const ActionButtons = ({
       >
         <Pencil className="h-4 w-4" />
       </Button>
-
-      {showDelete && onDelete && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          title="Delete content"
-          aria-label="Delete content"
-          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   )
 }

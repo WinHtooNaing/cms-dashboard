@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Eye, Pencil, Plus, Trash2, FileText } from "lucide-react"
+import { Eye, Pencil, FileText } from "lucide-react"
 
 import type { LucideIcon } from "lucide-react"
 
@@ -31,18 +31,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog"
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 import FieldError from "../error/FieldError"
 
@@ -79,8 +68,6 @@ const AboutContentManager = ({
     null
   )
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-
   const {
     register,
     handleSubmit,
@@ -99,17 +86,17 @@ const AboutContentManager = ({
     return item.title.toLowerCase() || item.description.toLowerCase()
   })
 
-  const openAddDialog = () => {
-    setMode("add")
-    setSelectedItem(null)
+  // const openAddDialog = () => {
+  //   setMode("add")
+  //   setSelectedItem(null)
 
-    reset({
-      title: "",
-      description: "",
-    })
+  //   reset({
+  //     title: "",
+  //     description: "",
+  //   })
 
-    setOpen(true)
-  }
+  //   setOpen(true)
+  // }
 
   const openViewDialog = (item: AboutContentItem) => {
     setMode("view")
@@ -147,10 +134,6 @@ const AboutContentManager = ({
     reset()
   }
 
-  const confirmDelete = () => {
-    setDeleteDialogOpen(false)
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -165,11 +148,6 @@ const AboutContentManager = ({
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
-
-        <Button onClick={openAddDialog}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add {itemLabel}
-        </Button>
       </div>
 
       <Card className="overflow-hidden">
@@ -247,18 +225,6 @@ const AboutContentManager = ({
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title="Delete content"
-                          aria-label={`Delete ${item.title}`}
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setDeleteDialogOpen(true)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -289,14 +255,6 @@ const AboutContentManager = ({
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>
-              {mode === "add"
-                ? `Add ${itemLabel}`
-                : mode === "edit"
-                  ? `Edit ${itemLabel}`
-                  : `View ${itemLabel}`}
-            </DialogTitle>
-
             <DialogDescription>
               {mode === "view"
                 ? "Review the complete content details."
@@ -373,25 +331,6 @@ const AboutContentManager = ({
           )}
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this content?</AlertDialogTitle>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-            >
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

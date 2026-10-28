@@ -19,7 +19,12 @@ const FooterManagement = () => {
   const [activeDialog, setActiveDialog] = useState<FooterDialogType | null>(
     null
   )
-
+  const [selectedSupportLink, setSelectedSupportLink] = useState<
+    SupportLinksValues["supportLinks"][number] | null
+  >(null)
+  const [selectedSocialLink, setSelectedSocialLink] = useState<
+    SocialLinksValues["socialLinks"][number] | null
+  >(null)
   const [viewDialog, setViewDialog] = useState<FooterDialogType | null>(null)
   const [description] = useState<FooterDescriptionValues["description"]>(
     "Discover quality electronics, explore the latest products, and find the right technology for your needs."
@@ -56,17 +61,28 @@ const FooterManagement = () => {
     },
   ])
 
-  const openDialog = (type: FooterDialogType) => {
+  const openDialog = (
+    type: FooterDialogType,
+    item?:
+      | SupportLinksValues["supportLinks"][number]
+      | SocialLinksValues["socialLinks"][number]
+  ) => {
     setViewDialog(null)
+
+    if (type === "support" && item && "path" in item) {
+      setSelectedSupportLink(item)
+    }
+
+    if (type === "social" && item && "url" in item) {
+      setSelectedSocialLink(item)
+    }
+
     setActiveDialog(type)
   }
-
   const openViewDialog = (type: FooterDialogType) => {
     setActiveDialog(null)
     setViewDialog(type)
   }
-
-  const openDeleteDialog = () => {}
 
   return (
     <div className="space-y-8 p-4 sm:p-6">
@@ -101,7 +117,7 @@ const FooterManagement = () => {
         />
 
         <FooterSupportLinks
-          links={supportLinks}
+          selectedLink={selectedSupportLink}
           open={activeDialog === "support"}
           onOpenChange={(open) => setActiveDialog(open ? "support" : null)}
         />
@@ -113,7 +129,7 @@ const FooterManagement = () => {
         />
 
         <FooterSocialLinks
-          links={socialLinks}
+          selectedLink={selectedSocialLink}
           open={activeDialog === "social"}
           onOpenChange={(open) => setActiveDialog(open ? "social" : null)}
         />
@@ -126,7 +142,6 @@ const FooterManagement = () => {
         socialLinks={socialLinks}
         onOpenDialog={openDialog}
         onView={openViewDialog}
-        onDelete={openDeleteDialog}
       />
     </div>
   )
