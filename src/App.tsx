@@ -5,7 +5,7 @@ import Header from "./pages/Header"
 import Footer from "./pages/Footer"
 import ImageCarousel from "./pages/home/ImageCarousel"
 import Category from "./pages/home/Category"
-import RelatedProducts from "./pages/home/RelatedProducts"
+
 import ContactDescription from "./pages/contact/ContactDescription"
 import Description from "./pages/about/Description"
 import WhoWeAre from "./pages/about/WhoWeAre"
@@ -17,9 +17,6 @@ import Products from "./pages/products/Products"
 import ProductView from "./components/products/ProductView"
 import NewCollection from "./pages/home/NewCollection"
 import Settings from "./pages/auth/Settings"
-function SidebarPage({ title }: { title: string }) {
-  return <div>{title}</div>
-}
 
 export function App() {
   const router = createBrowserRouter([
