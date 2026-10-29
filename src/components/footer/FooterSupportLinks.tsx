@@ -2,19 +2,14 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { LifeBuoy, Link as LinkIcon } from "lucide-react"
-
 import {
   supportLinksSchema,
   type SupportLinksValues,
 } from "@/types/footerSchema"
 
 import FieldError from "../error/FieldError"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -60,32 +55,6 @@ const FooterSupportLinks = ({
 
   return (
     <>
-      <Card className="flex flex-col">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3 text-primary">
-              <LifeBuoy size={22} />
-            </div>
-
-            <div>
-              <CardTitle>Support Links</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="mt-auto">
-          <Button
-            type="button"
-            className="w-full"
-
-            disabled={!selectedLink}
-          >
-            <LinkIcon className="mr-2 h-4 w-4" />
-            View Support Links
-          </Button>
-        </CardContent>
-      </Card>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>

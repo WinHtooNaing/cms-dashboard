@@ -44,7 +44,7 @@ export type AboutContentItem = AboutContentFormValues & {
   id: string
 }
 
-type DialogMode = "add" | "edit" | "view"
+type DialogMode = "edit" | "view"
 
 type AboutContentManagerProps = {
   title: string
@@ -62,7 +62,7 @@ const AboutContentManager = ({
   initialItems,
 }: AboutContentManagerProps) => {
   const [open, setOpen] = useState(false)
-  const [mode, setMode] = useState<DialogMode>("add")
+  const [mode, setMode] = useState<DialogMode>()
 
   const [selectedItem, setSelectedItem] = useState<AboutContentItem | null>(
     null
@@ -85,18 +85,6 @@ const AboutContentManager = ({
   const filteredItems = initialItems.filter((item) => {
     return item.title.toLowerCase() || item.description.toLowerCase()
   })
-
-  // const openAddDialog = () => {
-  //   setMode("add")
-  //   setSelectedItem(null)
-
-  //   reset({
-  //     title: "",
-  //     description: "",
-  //   })
-
-  //   setOpen(true)
-  // }
 
   const openViewDialog = (item: AboutContentItem) => {
     setMode("view")
@@ -135,7 +123,7 @@ const AboutContentManager = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-primary/10 text-primary">
@@ -324,7 +312,7 @@ const AboutContentManager = ({
                 </Button>
 
                 <Button type="submit" disabled={isSubmitting}>
-                  {mode === "add" ? "Validate Content" : "Validate Changes"}
+                  Validate Changes
                 </Button>
               </div>
             </form>

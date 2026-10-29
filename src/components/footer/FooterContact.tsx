@@ -1,8 +1,7 @@
-import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { Mail, MapPin, Pencil, Phone } from "lucide-react"
+import { Mail, MapPin, Phone } from "lucide-react"
 
 import {
   footerContactSchema,
@@ -13,8 +12,6 @@ import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -38,43 +35,12 @@ const FooterContact = ({ contact, open, onOpenChange }: FooterContactProps) => {
     defaultValues: contact,
   })
 
-  useEffect(() => {
-    if (open) {
-      form.reset(contact)
-    }
-  }, [open, contact, form])
-
   const handleSubmit = (data: FooterContactValues) => {
     console.log("Form validation successful:", data)
   }
 
   return (
     <>
-      <Card className="flex flex-col">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3 text-primary">
-              <MapPin size={22} />
-            </div>
-
-            <div>
-              <CardTitle>Contact Information</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="mt-auto">
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => onOpenChange(true)}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Contact Information
-          </Button>
-        </CardContent>
-      </Card>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

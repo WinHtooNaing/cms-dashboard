@@ -5,26 +5,32 @@ import FooterSocialLinks from "@/components/footer/FooterSocialLinks"
 import FooterContact from "@/components/footer/FooterContact"
 import FooterSupportLinks from "@/components/footer/FooterSupportLinks"
 import FooterContentTable from "@/components/footer/FooterContentTable"
-import FooterViewDialog from "@/components/footer/FooterViewDialog"
+import FooterViewDialog, {
+  type FooterViewItem,
+} from "@/components/footer/FooterViewDialog"
 import type { FooterDialogType } from "@/components/footer/FooterContentTable"
-
+import { FileText, LifeBuoy, Mail, Share2 } from "lucide-react"
 import type {
   FooterDescriptionValues,
   SupportLinksValues,
   FooterContactValues,
   SocialLinksValues,
 } from "@/types/footerSchema"
+import FooterSectionCard from "@/components/footer/FooterSectionCard"
 
 const FooterManagement = () => {
   const [activeDialog, setActiveDialog] = useState<FooterDialogType | null>(
     null
   )
+  const [selectedViewItem, setSelectedViewItem] =
+    useState<FooterViewItem | null>(null)
   const [selectedSupportLink, setSelectedSupportLink] = useState<
     SupportLinksValues["supportLinks"][number] | null
   >(null)
   const [selectedSocialLink, setSelectedSocialLink] = useState<
     SocialLinksValues["socialLinks"][number] | null
   >(null)
+  //const [selectedContact, setSelectedContact] = useState(null)
   const [viewDialog, setViewDialog] = useState<FooterDialogType | null>(null)
   const [description] = useState<FooterDescriptionValues["description"]>(
     "Discover quality electronics, explore the latest products, and find the right technology for your needs."
@@ -79,13 +85,14 @@ const FooterManagement = () => {
 
     setActiveDialog(type)
   }
-  const openViewDialog = (type: FooterDialogType) => {
+  const openViewDialog = (type: FooterDialogType, item?: FooterViewItem) => {
     setActiveDialog(null)
+    setSelectedViewItem(item ?? null)
     setViewDialog(type)
   }
 
   return (
-    <div className="space-y-8 p-4 sm:p-6">
+    <div className="space-y-8 pt-4 sm:pt-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Footer Management</h1>
 
@@ -102,12 +109,38 @@ const FooterManagement = () => {
           onOpenChange={(open) => {
             if (!open) {
               setViewDialog(null)
+              setSelectedViewItem(null)
             }
           }}
           description={description}
           supportLinks={supportLinks}
           contact={contact}
           socialLinks={socialLinks}
+          selectedItem={selectedViewItem}
+        />
+
+        <FooterSectionCard
+          title="Footer Description"
+          icon={FileText}
+          onView={() => openViewDialog("description")}
+        />
+
+        <FooterSectionCard
+          title="Support Links"
+          icon={LifeBuoy}
+          onView={() => openViewDialog("support")}
+        />
+
+        <FooterSectionCard
+          title="Contact Information"
+          icon={Mail}
+          onView={() => openViewDialog("contact")}
+        />
+
+        <FooterSectionCard
+          title="Social Media Links"
+          icon={Share2}
+          onView={() => openViewDialog("social")}
         />
 
         <FooterDescription

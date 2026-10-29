@@ -44,7 +44,7 @@ type Feature = featureContentFormValues & {
   id: string
 }
 
-type DialogMode = "add" | "edit" | "view"
+type DialogMode = "edit" | "view"
 
 const defaultValues: WhoWeAreFormValues = {
   badge: "Who We Are",
@@ -76,7 +76,7 @@ const WhoWeArePage = () => {
   const [sectionMode, setSectionMode] = useState<"view" | "edit">("edit")
 
   const [featureOpen, setFeatureOpen] = useState(false)
-  const [featureMode, setFeatureMode] = useState<DialogMode>("add")
+  const [featureMode, setFeatureMode] = useState<DialogMode>()
 
   const {
     register,
@@ -148,7 +148,7 @@ const WhoWeArePage = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pt-4 sm:pt-6">
       <AboutPageHeader
         icon={FileText}
         title="Who We Are Management"

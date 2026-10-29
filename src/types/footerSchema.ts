@@ -30,7 +30,6 @@ const footerUrlSchema = z
   )
 
 
-// Footer description
 
 
 export const footerDescriptionSchema = z.object({
@@ -46,7 +45,6 @@ export type FooterDescriptionValues = z.infer<
 >;
 
 
-// Support links
 
 
 export const supportLinkSchema = z.object({
@@ -63,7 +61,7 @@ export const supportLinksSchema = z.object({
   supportLinks: z
     .array(supportLinkSchema)
     .min(1, "Add at least one support link.")
-    .max(5, "You can add up to 5 support links."),
+    .max(4, "You can add up to 4 support links."),
 })
 
 export type SupportLinksValues = z.infer<
@@ -71,7 +69,6 @@ export type SupportLinksValues = z.infer<
 >
 
 
-// Contact information
 
 
 export const footerContactSchema = z.object({
@@ -113,7 +110,6 @@ export type FooterContactValues = z.infer<
 >
 
 
-// Social media links
 
 
 export const socialLinkSchema = z.object({
@@ -152,7 +148,7 @@ export const socialLinkSchema = z.object({
 export const socialLinksSchema = z.object({
   socialLinks: z
     .array(socialLinkSchema)
-    .max(4, "You can add up to 4 social media links."),
+    .max(3, "Only three link can be accepted"),
 })
 
 export type SocialLinksValues = z.infer<

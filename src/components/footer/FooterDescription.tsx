@@ -2,8 +2,6 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { FileText, Pencil } from "lucide-react"
-
 import {
   footerDescriptionSchema,
   type FooterDescriptionValues,
@@ -12,8 +10,6 @@ import {
 import FieldError from "../error/FieldError"
 
 import { Button } from "@/components/ui/button"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import {
   Dialog,
@@ -59,31 +55,6 @@ const FooterDescription = ({
 
   return (
     <>
-      <Card className="flex flex-col">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3 text-primary">
-              <FileText size={22} />
-            </div>
-
-            <div>
-              <CardTitle>Footer Description</CardTitle>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="mt-auto">
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => onOpenChange(true)}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Description
-          </Button>
-        </CardContent>
-      </Card>
-
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

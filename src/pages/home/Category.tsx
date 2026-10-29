@@ -30,12 +30,9 @@ import { Eye, Pencil, Plus, Save, Trash2 } from "lucide-react"
 
 export default function Category() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="mb-1 text-sm font-medium text-primary">
-            Home / Category
-          </p>
           <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage your catalog and choose

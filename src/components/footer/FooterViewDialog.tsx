@@ -13,7 +13,11 @@ import type {
   SocialLinksValues,
 } from "@/types/footerSchema"
 
-type FooterViewType = "description" | "support" | "contact" | "social"
+export type FooterViewType = "description" | "support" | "contact" | "social"
+
+export type FooterViewItem =
+  | SupportLinksValues["supportLinks"][number]
+  | SocialLinksValues["socialLinks"][number]
 
 type FooterViewDialogProps = {
   type: FooterViewType
@@ -24,6 +28,8 @@ type FooterViewDialogProps = {
   supportLinks: SupportLinksValues["supportLinks"]
   contact: FooterContactValues
   socialLinks: SocialLinksValues["socialLinks"]
+
+  selectedItem?: FooterViewItem | null
 }
 
 const FooterViewDialog = ({
@@ -34,13 +40,24 @@ const FooterViewDialog = ({
   supportLinks,
   contact,
   socialLinks,
+  selectedItem,
 }: FooterViewDialogProps) => {
   const titles: Record<FooterViewType, string> = {
     description: "Footer Description",
-    support: "Support Links",
+    support: "Support Link Details",
     contact: "Contact Information",
-    social: "Social Media Links",
+    social: "Social Media Details",
   }
+
+  const selectedSupport =
+    type === "support" && selectedItem && "path" in selectedItem
+      ? selectedItem
+      : null
+
+  const selectedSocial =
+    type === "social" && selectedItem && "url" in selectedItem
+      ? selectedItem
+      : null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -48,7 +65,11 @@ const FooterViewDialog = ({
         <DialogHeader>
           <DialogTitle>{titles[type]}</DialogTitle>
 
-          <DialogDescription>Existing footer content.</DialogDescription>
+          <DialogDescription>
+            {selectedItem
+              ? "View the details of the selected item."
+              : "Existing footer content."}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-2">
@@ -66,27 +87,40 @@ const FooterViewDialog = ({
 
           {type === "support" && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">
-                Support Links ({supportLinks.length})
-              </h3>
+              {selectedSupport ? (
+                <>
+                  <ReadOnlyField
+                    label="Link Name"
+                    value={selectedSupport.name}
+                  />
 
-              {supportLinks.length > 0 ? (
-                supportLinks.map((link) => (
-                  <div
-                    key={link.id}
-                    className="space-y-1 rounded-lg border p-3"
-                  >
-                    <p className="text-sm font-medium">{link.name}</p>
-
-                    <p className="text-sm break-all text-muted-foreground">
-                      {link.path}
-                    </p>
-                  </div>
-                ))
+                  <ReadOnlyField label="Path" value={selectedSupport.path} />
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  No support links available.
-                </p>
+                <>
+                  <h3 className="text-sm font-semibold">
+                    Support Links ({supportLinks.length})
+                  </h3>
+
+                  {supportLinks.length > 0 ? (
+                    supportLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="space-y-1 rounded-lg border p-3"
+                      >
+                        <p className="text-sm font-medium">{link.name}</p>
+
+                        <p className="text-sm break-all text-muted-foreground">
+                          {link.path}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No support links available.
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -103,27 +137,37 @@ const FooterViewDialog = ({
 
           {type === "social" && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold">
-                Social Media Profiles ({socialLinks.length})
-              </h3>
+              {selectedSocial ? (
+                <>
+                  <ReadOnlyField label="Platform" value={selectedSocial.name} />
 
-              {socialLinks.length > 0 ? (
-                socialLinks.map((link) => (
-                  <div
-                    key={link.id}
-                    className="space-y-1 rounded-lg border p-3"
-                  >
-                    <p className="text-sm font-medium">{link.name}</p>
-
-                    <p className="text-sm break-all text-muted-foreground">
-                      {link.url}
-                    </p>
-                  </div>
-                ))
+                  <ReadOnlyField label="URL" value={selectedSocial.url} />
+                </>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  No social media links available.
-                </p>
+                <>
+                  <h3 className="text-sm font-semibold">
+                    Social Media Profiles ({socialLinks.length})
+                  </h3>
+
+                  {socialLinks.length > 0 ? (
+                    socialLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="space-y-1 rounded-lg border p-3"
+                      >
+                        <p className="text-sm font-medium">{link.name}</p>
+
+                        <p className="text-sm break-all text-muted-foreground">
+                          {link.url}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No social media links available.
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}

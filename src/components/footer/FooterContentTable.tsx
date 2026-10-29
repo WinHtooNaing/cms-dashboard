@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
+import type { FooterViewItem } from "@/components/footer/FooterViewDialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,7 @@ type FooterContentTableProps = {
       | SupportLinksValues["supportLinks"][number]
       | SocialLinksValues["socialLinks"][number]
   ) => void
-  onView: (type: FooterDialogType) => void
+  onView: (type: FooterDialogType, item?: FooterViewItem) => void
 }
 
 const FooterContentTable = ({
@@ -159,7 +159,7 @@ const FooterContentTable = ({
 
                     <TableCell>
                       <ActionButtons
-                        onView={() => onView("support")}
+                        onView={() => onView("support", link)}
                         onEdit={() => onOpenDialog("support", link)}
                       />
                     </TableCell>
@@ -266,7 +266,7 @@ const FooterContentTable = ({
 
                     <TableCell>
                       <ActionButtons
-                        onView={() => onView("social")}
+                        onView={() => onView("social", link)}
                         onEdit={() => onOpenDialog("social", link)}
                       />
                     </TableCell>

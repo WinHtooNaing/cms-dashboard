@@ -62,7 +62,7 @@ const Description = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pt-4 sm:pt-6">
       <AboutPageHeader
         icon={FileText}
         title="Introduction Management"
