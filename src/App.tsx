@@ -6,7 +6,7 @@ import Footer from "./pages/Footer"
 import ImageCarousel from "./pages/home/ImageCarousel"
 import Category from "./pages/home/Category"
 
-import ContactDescription from "./pages/contact/ContactDescription"
+import ContactDescription from "./pages/contact/ContactUsManagement"
 import Description from "./pages/about/Description"
 import WhoWeAre from "./pages/about/WhoWeAre"
 import OurPurposes from "./pages/about/OurPurposes"

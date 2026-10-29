@@ -47,7 +47,7 @@ const FooterContentTable = ({
   onView,
 }: FooterContentTableProps) => {
   return (
-    <Tabs defaultValue="description" className="space-y-4">
+    <Tabs defaultValue="description" className="space-y-4 pb-2">
       <TabsList className="grid w-full grid-cols-2 gap-2 p-2 sm:h-auto sm:grid-cols-4">
         <TabsTrigger
           value="description"
@@ -105,7 +105,7 @@ const FooterContentTable = ({
 
                   <TableCell>
                     <p className="wrap-break max-w-3xl text-sm leading-7 whitespace-pre-wrap">
-                      {description}
+                      {description.slice(0, 89)}. . .
                     </p>
                   </TableCell>
 
@@ -135,8 +135,8 @@ const FooterContentTable = ({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Link Name</TableHead>
+                  <TableHead className="w-30">No.</TableHead>
+                  <TableHead className="w-100">Link Name</TableHead>
                   <TableHead>Path</TableHead>
                   <TableHead className="w-36 text-right">Actions</TableHead>
                 </TableRow>
@@ -184,7 +184,7 @@ const FooterContentTable = ({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-40">Field</TableHead>
+                  <TableHead className="w-80">Field</TableHead>
                   <TableHead>Content</TableHead>
                   <TableHead className="w-28 text-right">Actions</TableHead>
                 </TableRow>
@@ -242,10 +242,12 @@ const FooterContentTable = ({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Platform</TableHead>
+                  <TableHead className="w-40">No.</TableHead>
+                  <TableHead className="w-80">Platform</TableHead>
                   <TableHead>URL</TableHead>
-                  <TableHead className="w-36 text-right">Actions</TableHead>
+                  <TableHead className="w-36 pr-3.5 text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
