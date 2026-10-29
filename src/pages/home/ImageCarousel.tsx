@@ -1,5 +1,4 @@
 import ImageCarouselDialog from "@/components/home/ImageCarouselDialog"
-
 export const dialogFields = [
   {
     id: "title",
@@ -37,11 +36,8 @@ export const dialogFields = [
 
 export default function ImageCarousel() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div>
-        <p className="mb-1 text-sm font-medium text-primary">
-          Home / Image Carousel
-        </p>
         <h1 className="text-2xl font-semibold tracking-tight">
           Image Carousel
         </h1>

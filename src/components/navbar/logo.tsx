@@ -2,17 +2,13 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import logo from "../../assets/logo/logo.png"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { GalleryVerticalEndIcon } from "lucide-react"
-const teams = {
-  name: "Tech Heaven",
-  logo: <GalleryVerticalEndIcon />,
-  plan: "admin dashboard",
-}
 
 export function Logo() {
   return (
@@ -27,13 +23,10 @@ export function Logo() {
               />
             }
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              {teams.logo}
-            </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{teams.name}</span>
-              <span className="truncate text-xs">{teams.plan}</span>
+              <img src={logo} alt="Company Logo" width={150} />
             </div>
+            <SidebarTrigger className="-ml-1" />
           </DropdownMenuTrigger>
         </DropdownMenu>
       </SidebarMenuItem>
