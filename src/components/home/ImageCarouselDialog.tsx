@@ -29,7 +29,9 @@ export default function ImageCarouselDialog({
       field.type === "file"
         ? z
             .custom<FileList>()
-            .optional()
+            .refine((files) => files && files.length > 0, {
+              message: "Image is required",
+            })
             .refine(
               (files) =>
                 !files ||
@@ -66,6 +68,7 @@ export default function ImageCarouselDialog({
             placeholder={`Enter ${field.label.toLowerCase()}`}
             rows={4}
             {...register(field.id)}
+            className={`${errors[field.id] ? "border-red-500" : ""}`}
           />
         )
       case "file":
@@ -75,6 +78,7 @@ export default function ImageCarouselDialog({
             type="file"
             accept="image/*"
             {...register(field.id)}
+            className={`${errors[field.id] ? "border-red-500" : ""}`}
           />
         )
       case "text":
@@ -85,6 +89,7 @@ export default function ImageCarouselDialog({
             type="text"
             placeholder={`Enter ${field.label.toLowerCase()}`}
             {...register(field.id)}
+            className={`${errors[field.id] ? "border-red-500" : ""}`}
           />
         )
     }

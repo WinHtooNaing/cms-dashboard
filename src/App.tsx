@@ -13,6 +13,10 @@ import OurPurposes from "./pages/about/OurPurposes"
 import CoreValues from "./pages/about/CoreValues"
 import WhyChooseUs from "./pages/about/WhyChooseUs"
 
+import Products from "./pages/products/Products"
+import ProductView from "./components/products/ProductView"
+import NewCollection from "./pages/home/NewCollection"
+import Settings from "./pages/auth/Settings"
 function SidebarPage({ title }: { title: string }) {
   return <div>{title}</div>
 }
@@ -36,16 +40,16 @@ export function App() {
           element: <Category />,
         },
         {
-          path: "/home/related-products",
-          element: <RelatedProducts />,
+          path: "/home/new-collection",
+          element: <NewCollection />,
         },
         {
           path: "/products",
-          element: <SidebarPage title="Products" />,
+          element: <Products />,
         },
         {
-          path: "/products/detail",
-          element: <SidebarPage title="Product Detail" />,
+          path: "/products/:id",
+          element: <ProductView />,
         },
         {
           path: "/about/description",
@@ -78,6 +82,10 @@ export function App() {
         {
           path: "/footer",
           element: <Footer />,
+        },
+        {
+          path: "/settings",
+          element: <Settings />,
         },
       ],
     },

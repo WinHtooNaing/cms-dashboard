@@ -43,14 +43,14 @@ export default function Category() {
             <DialogTrigger render={<Button />}>
               <Eye /> See category
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl min-w-[60%]">
               <DialogHeader>
                 <DialogTitle>Category preview</DialogTitle>
                 <DialogDescription>
                   How your categories can look on the home page.
                 </DialogDescription>
               </DialogHeader>
-              <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-5">
+              <div className="grid max-h-[70vh] grid-cols-3 gap-3 overflow-y-auto md:grid-cols-5">
                 {categories.map((category) => (
                   <div
                     key={category.id}
