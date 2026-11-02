@@ -87,7 +87,6 @@ export default function ProductTable() {
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className=""
           />
           <div className="flex gap-2 max-sm:flex-col">
             <DropdownMenu>

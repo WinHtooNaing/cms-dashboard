@@ -56,7 +56,7 @@ export default function CategoryDialog({
     console.log("data", data)
   }
   return (
-    <DialogContent className="flex max-h-[85vh] flex-col overflow-scroll sm:max-w-2xl">
+    <DialogContent className="flex max-h-[85vh] scrollbar-none flex-col overflow-scroll sm:max-w-2xl">
       <DialogHeader>
         <DialogTitle>
           {mode === "create" ? "Create product" : "Update product"}

@@ -5,6 +5,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -14,6 +15,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -32,7 +34,7 @@ export function NavMain({
   }[]
 }) {
   const location = useLocation()
-
+  const { isMobile, setOpenMobile } = useSidebar()
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Collections</SidebarGroupLabel>
@@ -45,11 +47,7 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger className={"w-full"}>
-                <SidebarMenuButton
-                  tooltip={item.title}
-                  // isActive={location.pathname.startsWith(item.url)}
-                  // className="data-active:bg-primary data-active:text-primary-foreground hover:bg-primary hover:text-primary-foreground"
-                >
+                <SidebarMenuButton tooltip={item.title}>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -62,7 +60,16 @@ export function NavMain({
                       <SidebarMenuSubButton
                         isActive={location.pathname === subItem.url}
                         className="hover:bg-primary hover:text-primary-foreground data-active:bg-primary data-active:text-primary-foreground"
-                        render={<NavLink to={subItem.url} />}
+                        render={
+                          <NavLink
+                            to={subItem.url}
+                            onClick={() => {
+                              if (isMobile) {
+                                setOpenMobile(false)
+                              }
+                            }}
+                          />
+                        }
                       >
                         <span>{subItem.title}</span>
                       </SidebarMenuSubButton>

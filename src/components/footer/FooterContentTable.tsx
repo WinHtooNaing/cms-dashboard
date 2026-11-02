@@ -8,7 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
 import type { FooterViewItem } from "@/components/footer/FooterViewDialog"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { Button } from "@/components/ui/button"
@@ -18,7 +20,6 @@ import { Eye, Pencil } from "lucide-react"
 import type {
   FooterDescriptionValues,
   SupportLinksValues,
-  FooterContactValues,
   SocialLinksValues,
 } from "@/types/footerSchema"
 
@@ -27,7 +28,6 @@ export type FooterDialogType = "description" | "support" | "contact" | "social"
 type FooterContentTableProps = {
   description: FooterDescriptionValues["description"]
   supportLinks: SupportLinksValues["supportLinks"]
-  contact: FooterContactValues
   socialLinks: SocialLinksValues["socialLinks"]
   onOpenDialog: (
     type: FooterDialogType,
@@ -41,239 +41,201 @@ type FooterContentTableProps = {
 const FooterContentTable = ({
   description,
   supportLinks,
-  contact,
   socialLinks,
   onOpenDialog,
   onView,
 }: FooterContentTableProps) => {
   return (
-    <Tabs defaultValue="description" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-2 gap-2 p-2 sm:h-auto sm:grid-cols-4">
+    <Tabs defaultValue="description" className="w-full space-y-4 pb-2">
+      <TabsList className="align-center grid h-auto w-full grid-cols-3 place-content-center items-center gap-1 p-1">
         <TabsTrigger
           value="description"
-          className="flex items-center gap-2 py-2"
+          className="min-w-0 px-2 py-2 text-xs sm:text-sm"
         >
-          <span>Description</span>
+          Description
         </TabsTrigger>
 
         <TabsTrigger
           value="supportlinks"
-          className="flex items-center gap-2 py-2"
+          className="min-w-0 px-2 py-2 text-xs sm:text-sm"
         >
-          <span>Support Links</span>
-        </TabsTrigger>
-
-        <TabsTrigger
-          value="contactInformations"
-          className="flex items-center gap-2 py-2"
-        >
-          <span>Contact Information</span>
+          Support Links
         </TabsTrigger>
 
         <TabsTrigger
           value="socialMediaLinks"
-          className="flex items-center gap-2 py-2"
+          className="min-w-0 px-2 py-2 text-xs sm:text-sm"
         >
-          <span>Social Media</span>
+          Social Media
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="description">
         <Card className="overflow-hidden border-border shadow-sm">
-          <div className="border-b p-4">
+          <div className="border-b p-3 sm:p-4">
             <h2 className="font-semibold">Footer Description</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
               Manage the description displayed in your website footer.
             </p>
           </div>
 
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-40">Field</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead className="w-28 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-32 sm:w-40">Field</TableHead>
 
-              <TableBody>
-                <TableRow>
-                  <TableCell className="align-top font-medium">
-                    Description
-                  </TableCell>
+                    <TableHead>Content</TableHead>
 
-                  <TableCell>
-                    <p className="wrap-break max-w-3xl text-sm leading-7 whitespace-pre-wrap">
-                      {description}
-                    </p>
-                  </TableCell>
+                    <TableHead className="w-24 text-right sm:w-28">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
 
-                  <TableCell>
-                    <ActionButtons
-                      onView={() => onView("description")}
-                      onEdit={() => onOpenDialog("description")}
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="align-top font-medium">
+                      Description
+                    </TableCell>
+
+                    <TableCell className="min-w-0">
+                      <p className="wrap-break max-w-3xl text-xs leading-6 whitespace-pre-wrap sm:text-sm sm:leading-7">
+                        {description.slice(0, 89)}
+                        {description.length > 89 ? "..." : ""}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      <ActionButtons
+                        onView={() => onView("description")}
+                        onEdit={() => onOpenDialog("description")}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
 
       <TabsContent value="supportlinks">
         <Card className="overflow-hidden border-border shadow-sm">
-          <div className="border-b p-4">
+          <div className="border-b p-3 sm:p-4">
             <h2 className="font-semibold">Footer Support Links</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
               Manage help and support links displayed in your footer.
             </p>
           </div>
 
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Link Name</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead className="w-36 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-16 sm:w-20">No.</TableHead>
 
-              <TableBody>
-                {supportLinks.map((link, index) => (
-                  <TableRow key={link.id}>
-                    <TableCell className="text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
+                    <TableHead className="min-w-32 sm:min-w-40">
+                      Link Name
+                    </TableHead>
 
-                    <TableCell className="font-medium">{link.name}</TableCell>
+                    <TableHead className="min-w-32">Path</TableHead>
 
-                    <TableCell>
-                      <span className="text-sm break-all text-muted-foreground">
-                        {link.path}
-                      </span>
-                    </TableCell>
-
-                    <TableCell>
-                      <ActionButtons
-                        onView={() => onView("support", link)}
-                        onEdit={() => onOpenDialog("support", link)}
-                      />
-                    </TableCell>
+                    <TableHead className="w-24 text-right sm:w-32">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </TabsContent>
+                </TableHeader>
 
-      <TabsContent value="contactInformations">
-        <Card className="overflow-hidden border-border shadow-sm">
-          <div className="border-b p-4">
-            <h2 className="font-semibold">Footer Contact Information</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Manage the email, phone number, and address shown in your footer.
-            </p>
-          </div>
+                <TableBody>
+                  {supportLinks.map((link, index) => (
+                    <TableRow key={link.id}>
+                      <TableCell className="text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
 
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-40">Field</TableHead>
-                  <TableHead>Content</TableHead>
-                  <TableHead className="w-28 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+                      <TableCell className="font-medium">{link.name}</TableCell>
 
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Email</TableCell>
-                  <TableCell className="break-all">{contact.email}</TableCell>
-                  <TableCell>
-                    <ActionButtons
-                      onView={() => onView("contact")}
-                      onEdit={() => onOpenDialog("contact")}
-                    />
-                  </TableCell>
-                </TableRow>
+                      <TableCell>
+                        <span className="text-xs break-all text-muted-foreground sm:text-sm">
+                          {link.path}
+                        </span>
+                      </TableCell>
 
-                <TableRow>
-                  <TableCell className="font-medium">Phone</TableCell>
-                  <TableCell>{contact.phone}</TableCell>
-                  <TableCell>
-                    <ActionButtons
-                      onView={() => onView("contact")}
-                      onEdit={() => onOpenDialog("contact")}
-                    />
-                  </TableCell>
-                </TableRow>
-
-                <TableRow>
-                  <TableCell className="font-medium">Address</TableCell>
-                  <TableCell>{contact.address}</TableCell>
-                  <TableCell>
-                    <ActionButtons
-                      onView={() => onView("contact")}
-                      onEdit={() => onOpenDialog("contact")}
-                    />
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                      <TableCell>
+                        <ActionButtons
+                          onView={() => onView("support", link)}
+                          onEdit={() => onOpenDialog("support", link)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
 
       <TabsContent value="socialMediaLinks">
         <Card className="overflow-hidden border-border shadow-sm">
-          <div className="border-b p-4">
+          <div className="border-b p-3 sm:p-4">
             <h2 className="font-semibold">Footer Social Media Links</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+
+            <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
               Manage your website's social media profiles.
             </p>
           </div>
 
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead className="w-36 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-16 sm:w-20">No.</TableHead>
 
-              <TableBody>
-                {socialLinks.map((link, index) => (
-                  <TableRow key={link.id}>
-                    <TableCell className="text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
+                    <TableHead className="min-w-32 sm:min-w-40">
+                      Platform
+                    </TableHead>
 
-                    <TableCell className="font-medium">{link.name}</TableCell>
+                    <TableHead className="min-w-40">URL</TableHead>
 
-                    <TableCell>
-                      <span className="text-sm break-all text-muted-foreground">
-                        {link.url}
-                      </span>
-                    </TableCell>
-
-                    <TableCell>
-                      <ActionButtons
-                        onView={() => onView("social", link)}
-                        onEdit={() => onOpenDialog("social", link)}
-                      />
-                    </TableCell>
+                    <TableHead className="w-24 text-right sm:w-32">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {socialLinks.map((link, index) => (
+                    <TableRow key={link.id}>
+                      <TableCell className="text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+
+                      <TableCell className="font-medium">{link.name}</TableCell>
+
+                      <TableCell>
+                        <span className="text-xs break-all text-muted-foreground sm:text-sm">
+                          {link.url}
+                        </span>
+                      </TableCell>
+
+                      <TableCell>
+                        <ActionButtons
+                          onView={() => onView("social", link)}
+                          onEdit={() => onOpenDialog("social", link)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
@@ -288,27 +250,29 @@ type ActionButtonsProps = {
 
 const ActionButtons = ({ onView, onEdit }: ActionButtonsProps) => {
   return (
-    <div className="flex justify-end gap-1">
+    <div className="flex justify-end gap-0.5 sm:gap-1">
       <Button
         type="button"
         variant="ghost"
         size="icon"
+        className="size-8 sm:size-9"
         title="View content"
         aria-label="View content"
         onClick={onView}
       >
-        <Eye className="h-4 w-4" />
+        <Eye className="size-4" />
       </Button>
 
       <Button
         type="button"
         variant="ghost"
         size="icon"
+        className="size-8 sm:size-9"
         title="Edit content"
         aria-label="Edit content"
         onClick={onEdit}
       >
-        <Pencil className="h-4 w-4" />
+        <Pencil className="size-4" />
       </Button>
     </div>
   )

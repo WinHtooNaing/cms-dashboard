@@ -29,17 +29,14 @@ import { Eye, Plus, Save } from "lucide-react"
 
 const NewCollection = () => {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="mb-1 text-sm font-medium text-primary">
-            Home / Related Products
-          </p>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Related Products
+            New Collections
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your Related Products
+            Manage your New Collections
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -86,9 +83,9 @@ const NewCollection = () => {
             </DialogTrigger>
             <DialogContent className="max-w-4xl min-w-[60%]">
               <DialogHeader>
-                <DialogTitle>Related Product preview</DialogTitle>
+                <DialogTitle>New Collection preview</DialogTitle>
                 <DialogDescription>
-                  How your related products can look on the home page.
+                  How your New Collecton can look on the home page.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid max-h-[70vh] grid-cols-3 gap-3 overflow-y-auto md:grid-cols-5">
@@ -114,10 +111,9 @@ const NewCollection = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Choose home related products</DialogTitle>
+                <DialogTitle>Choose home new collection</DialogTitle>
                 <DialogDescription>
-                  Select the related products customers should see on the home
-                  page.
+                  Select new collection customers should see on the home page.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid max-h-[55vh] gap-2 overflow-y-auto">
@@ -148,9 +144,9 @@ const NewCollection = () => {
       </div>
       <Card>
         <CardHeader className="border-b">
-          <CardTitle>All related products</CardTitle>
+          <CardTitle>All New Collections</CardTitle>
           <CardDescription>
-            {categories.length} related products in your catalog ·{" "}
+            {categories.length} new collection in your catalog ·{" "}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
