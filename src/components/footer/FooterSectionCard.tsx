@@ -20,7 +20,7 @@ const FooterSectionCard = ({
   return (
     <Card className="flex flex-col">
       <CardHeader>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <div className="rounded-lg bg-primary/10 p-3 text-primary">
             <Icon size={22} />
           </div>
@@ -34,7 +34,7 @@ const FooterSectionCard = ({
       <CardContent className="mt-auto">
         <Button type="button" className="w-full" onClick={onView}>
           <Eye className="mr-2 h-4 w-4" />
-          View
+          View {title}
         </Button>
       </CardContent>
     </Card>

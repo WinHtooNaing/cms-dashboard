@@ -228,7 +228,7 @@ const WhoWeArePage = () => {
 
                 <TableCell>
                   <p className="wrap-break max-w-3xl text-sm leading-7 whitespace-pre-wrap">
-                    {defaultValues.description}
+                    {defaultValues.description.slice(0, 90)}. . .
                   </p>
                 </TableCell>
               </TableRow>
@@ -240,7 +240,7 @@ const WhoWeArePage = () => {
 
                 <TableCell>
                   <p className="wrap-break max-w-3xl text-sm leading-7 whitespace-pre-wrap">
-                    {defaultValues.secondaryDescription}
+                    {defaultValues.secondaryDescription.slice(0, 90)}. . .
                   </p>
                 </TableCell>
               </TableRow>
@@ -326,7 +326,7 @@ const WhoWeArePage = () => {
           if (!open) closeSectionDialog()
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[90vh] scrollbar-none overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
               {sectionMode === "view"

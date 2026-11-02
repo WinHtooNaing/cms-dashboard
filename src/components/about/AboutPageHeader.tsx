@@ -23,7 +23,7 @@ const AboutPageHeader = ({
             {title}
           </h1>
 
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+          <p className="max-w-3xl text-sm text-muted-foreground sm:text-base">
             {description}
           </p>
         </div>

@@ -1,16 +1,11 @@
 import { useState } from "react"
 
-import { Clock3, Eye, Mail, MapPin, Pencil, Phone } from "lucide-react"
+import { Clock3, Mail, MapPin, Pencil, Phone } from "lucide-react"
 
 import { formatBusinessHours } from "@/util/formatBusinessHours"
-import {
-  // contactUsSchema,
-  // daysOfWeek,
-  type ContactUsValues,
-} from "@/types/contactUsSchema"
+import { type ContactUsValues } from "@/types/contactUsSchema"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import GetInTouchViewDialog from "@/components/contactUs/GetInTouchViewDialog"
 import GetInTouchFormDialog from "@/components/contactUs/GetInTouchFormDialog"
 
 const initialContact: ContactUsValues = {
@@ -38,7 +33,6 @@ const initialContact: ContactUsValues = {
 const ContactUsManagement = () => {
   const [contact, setContact] = useState<ContactUsValues>(initialContact)
 
-  const [viewOpen, setViewOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
 
   const cards = [
@@ -93,15 +87,6 @@ const ContactUsManagement = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setViewOpen(true)}
-            >
-              <Eye className="mr-2 size-4" />
-              View
-            </Button>
-
             <Button type="button" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-2 size-4" />
               Edit
@@ -140,11 +125,7 @@ const ContactUsManagement = () => {
           </div>
         </CardContent>
       </Card>
-      <GetInTouchViewDialog
-        open={viewOpen}
-        onOpenChange={setViewOpen}
-        contact={contact}
-      />
+
       <GetInTouchFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}

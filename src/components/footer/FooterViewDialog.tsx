@@ -9,7 +9,6 @@ import {
 import type {
   FooterDescriptionValues,
   SupportLinksValues,
-  FooterContactValues,
   SocialLinksValues,
 } from "@/types/footerSchema"
 
@@ -26,7 +25,6 @@ type FooterViewDialogProps = {
 
   description: FooterDescriptionValues["description"]
   supportLinks: SupportLinksValues["supportLinks"]
-  contact: FooterContactValues
   socialLinks: SocialLinksValues["socialLinks"]
 
   selectedItem?: FooterViewItem | null
@@ -38,7 +36,6 @@ const FooterViewDialog = ({
   onOpenChange,
   description,
   supportLinks,
-  contact,
   socialLinks,
   selectedItem,
 }: FooterViewDialogProps) => {
@@ -122,16 +119,6 @@ const FooterViewDialog = ({
                   )}
                 </>
               )}
-            </div>
-          )}
-
-          {type === "contact" && (
-            <div className="space-y-3">
-              <ReadOnlyField label="Email Address" value={contact.email} />
-
-              <ReadOnlyField label="Phone Number" value={contact.phone} />
-
-              <ReadOnlyField label="Address" value={contact.address} />
             </div>
           )}
 
