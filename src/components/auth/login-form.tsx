@@ -6,6 +6,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { getApiErrorMessage } from "@/lib/api-error"
+import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 import {
   Field,
   FieldError,
@@ -17,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { loginSchema } from "@/types/loginSchema"
+import { loginUser } from "@/service/auth.service"
 export function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -25,8 +29,28 @@ export function LoginForm() {
       password: "",
     },
   })
-  function onSubmit(data: z.infer<typeof loginSchema>) {
-    console.log(data)
+  const navigate = useNavigate()
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    try {
+      const response = await loginUser(data)
+
+      const { user, accessToken, refreshToken } = response
+      if (user.role !== "ADMIN") {
+        toast.error("You don't have permission to access the admin dashboard.")
+        return
+      }
+
+      localStorage.setItem("accessToken", accessToken)
+      localStorage.setItem("user", JSON.stringify(user))
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken)
+      }
+      toast.success("Login successful!")
+
+      navigate("/home")
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
   }
   return (
     <div>
@@ -88,8 +112,12 @@ export function LoginForm() {
               />
 
               <Field>
-                <Button type="submit" className="cursor-pointer py-5">
-                  Login
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  className="w-full cursor-pointer py-5"
+                >
+                  {form.formState.isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               </Field>
             </FieldGroup>

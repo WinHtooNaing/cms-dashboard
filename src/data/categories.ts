@@ -1,59 +1,124 @@
 export type CategoryItem = {
   id: number
   name: string
-  image: string
+  slug: string
+  description: string | null
+  imageUrl: string
+  imagePublicId: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
-
 export const categories: CategoryItem[] = [
   {
     id: 1,
     name: "Watches",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+    slug: "watches",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+    imagePublicId: "watches",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 2,
     name: "TV & Entertainment",
-    image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400",
+    slug: "tv-and-entertainment",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400",
+    imagePublicId: "tv-and-entertainment",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 3,
     name: "Home & Kitchen",
-    image: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400",
+    slug: "home-and-kitchen",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=400",
+    imagePublicId: "home-and-kitchen",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 4,
     name: "Mobile Phones",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+    slug: "mobile-phones",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+    imagePublicId: "mobile-phones",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 5,
     name: "Laptops & Computers",
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    slug: "laptops-and-computers",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
+    imagePublicId: "laptops-and-computers",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 6,
     name: "Audio & Headphones",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    slug: "audio-and-headphones",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-150574<PASSWORD>?w=4<PASSWORD>",
+    imagePublicId: "audio-and-headphones",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 7,
     name: "Cameras",
-    image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400",
+    slug: "cameras",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400",
+    imagePublicId: "cameras",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 8,
     name: "Gaming",
-    image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400",
+    slug: "gaming",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=400",
+    imagePublicId: "gaming",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 9,
     name: "Accessories",
-    image: "https://images.unsplash.com/photo-1503602642458-232111445657?w=400",
+    slug: "accessories",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1503602642458-232111445657?w=400",
+    imagePublicId: "accessories",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 10,
     name: "Smart Home",
-    image: "https://images.unsplash.com/photo-1558002038-1055907df827?w=400",
+    slug: "smart-home",
+    description: null,
+    imageUrl: "https://images.unsplash.com/photo-1558002038-1055907df827?w=400",
+    imagePublicId: "smart-home",
+    isActive: true,
+    createdAt: "2023-01-01T<PASSWORD>:<PASSWORD>Z",
+    updatedAt: "2<PASSWORD>-<PASSWORD>-<PASSWORD>T<PASSWORD>:<PASSWORD>Z",
   },
 ]
 

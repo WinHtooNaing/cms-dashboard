@@ -25,10 +25,15 @@ import {
   PaginationNext,
   PaginationLink,
 } from "@/components/ui/pagination"
-import { categories } from "@/data/categories"
+import type { CategoryItem } from "@/data/categories"
+import { createCategory } from "@/service/category.service"
+
 import { Eye, Pencil, Plus, Save, Trash2 } from "lucide-react"
+import { useState } from "react"
 
 export default function Category() {
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -57,7 +62,7 @@ export default function Category() {
                     className="overflow-hidden rounded-xl border bg-card"
                   >
                     <img
-                      src={category.image}
+                      src={category.imageUrl}
                       alt={category.name}
                       className="aspect-square w-full object-cover"
                     />
@@ -86,7 +91,7 @@ export default function Category() {
                   >
                     <input type="checkbox" className="size-4 accent-primary" />
                     <img
-                      src={category.image}
+                      src={category.imageUrl}
                       alt=""
                       className="size-10 rounded-md object-cover"
                     />
@@ -106,7 +111,8 @@ export default function Category() {
             <DialogTrigger render={<Button />}>
               <Plus /> Add category
             </DialogTrigger>
-            <CategoryDialog mode="create" />
+
+            <CategoryDialog mode="create" onSave={createCategory} />
           </Dialog>
         </div>
       </div>
@@ -117,11 +123,11 @@ export default function Category() {
             {categories.length} categories in your catalog ·{" "}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {categories.map((category) => (
             <Card key={category.id} className="overflow-hidden py-0">
               <img
-                src={category.image}
+                src={category.imageUrl}
                 alt={category.name}
                 className="aspect-4/3 w-full object-cover"
               />
@@ -134,16 +140,17 @@ export default function Category() {
                 </div>
                 <div className="flex gap-1">
                   <Dialog>
-                    <DialogTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label={`Update ${category.name}`}
-                      >
-                        <Pencil />
-                      </Button>
+                    <DialogTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Update ${category.name}`}
+                        />
+                      }
+                    >
+                      <Pencil />
                     </DialogTrigger>
-                    <CategoryDialog mode="update" category={category} />
                   </Dialog>
                   <Button
                     variant="ghost"

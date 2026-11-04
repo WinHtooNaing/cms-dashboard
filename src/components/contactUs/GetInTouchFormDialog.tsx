@@ -47,10 +47,6 @@ const GetInTouchFormDialog = ({
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-2xl">
         <DialogHeader className="shrink-0">
           <DialogTitle className="text-xl">Edit Get in Touch</DialogTitle>
-          {/* 
-          <DialogDescription>
-            Update your contact information and business hours.
-          </DialogDescription> */}
         </DialogHeader>
         <div className="min-h-0 flex-1 scrollbar-none overflow-y-auto">
           <form className="space-y-8 pr-2">

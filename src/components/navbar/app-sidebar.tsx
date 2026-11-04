@@ -11,18 +11,21 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-import { Bot, Footprints, Heading, House, Info, Settings2 } from "lucide-react"
+import {
+  Bot,
+  Footprints,
+  Heading,
+  House,
+  Info,
+  ListOrderedIcon,
+  Settings2,
+} from "lucide-react"
 
 import { Logo } from "./logo"
 import { NavMain } from "./nav-main"
+import { getCurrentUser } from "@/lib/auth"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "winhtoonaing2003@gmail.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-
   navMain: [
     {
       title: "Home",
@@ -59,6 +62,12 @@ const data = {
       icon: Settings2,
       items: [{ title: "Contact Description", url: "/contact/description" }],
     },
+    {
+      title: "Order",
+      url: "/order",
+      icon: ListOrderedIcon,
+      items: [{ title: "Order", url: "/order" }],
+    },
   ],
 
   global: [
@@ -76,6 +85,8 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const user = getCurrentUser()
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -84,12 +95,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="overflow-x-hidden">
         <NavMain items={data.navMain} />
-
         <NavProjects global={data.global} />
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {user && (
+          <NavUser
+            user={{
+              name: user.name,
+              email: user.email,
+            }}
+          />
+        )}
       </SidebarFooter>
 
       <SidebarRail />
