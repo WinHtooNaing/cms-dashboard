@@ -15,10 +15,8 @@ const Settings = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
-      confirm_password: "",
     },
   })
   function onSubmit(data: z.infer<typeof loginSchema>) {
@@ -42,24 +40,24 @@ const Settings = () => {
             <CardContent className="space-y-5">
               <Field>
                 <FieldLabel htmlFor="username" className="text-primary">
-                  Username
+                  Name
                 </FieldLabel>
                 <Input
-                  id="username"
-                  type="username"
-                  defaultValue="Win Htoo Naing"
+                  id="name"
+                  type="text"
+                  defaultValue="Susil Kyan"
                   disabled
                   readOnly
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="username" className="text-primary">
-                  Username
+                <FieldLabel htmlFor="email" className="text-primary">
+                  Email
                 </FieldLabel>
                 <Input
                   id="email"
                   type="email"
-                  defaultValue="winhtoonaing2003@gmail.com"
+                  defaultValue="admin@gmail.com"
                   disabled
                   readOnly
                 />
@@ -69,8 +67,8 @@ const Settings = () => {
                   Password
                 </FieldLabel>
                 <Input
-                  id="username"
-                  type="username"
+                  id="password"
+                  type="password"
                   defaultValue="********"
                   disabled
                   readOnly
@@ -85,27 +83,6 @@ const Settings = () => {
             <CardContent>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
-                  <Controller
-                    name="username"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <FieldLabel htmlFor="username" className="text-primary">
-                          Username
-                        </FieldLabel>
-                        <Input
-                          {...field}
-                          id="username"
-                          type="username"
-                          placeholder="Your Name"
-                          className={`${fieldState.invalid ? "border-red-500" : ""}`}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
                   <Controller
                     name="email"
                     control={form.control}
@@ -145,32 +122,6 @@ const Settings = () => {
                           id="password"
                           type="password"
                           placeholder="*******"
-                          className={`${fieldState.invalid ? "border-red-500" : ""}`}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                  <Controller
-                    name="confirm_password"
-                    control={form.control}
-                    render={({ field, fieldState }) => (
-                      <Field>
-                        <div className="flex items-center">
-                          <FieldLabel
-                            htmlFor="confirm-password"
-                            className="text-primary"
-                          >
-                            confirm-password
-                          </FieldLabel>
-                        </div>
-                        <Input
-                          {...field}
-                          id="confirm-password"
-                          type="password"
-                          placeholder="********"
                           className={`${fieldState.invalid ? "border-red-500" : ""}`}
                         />
                         {fieldState.invalid && (

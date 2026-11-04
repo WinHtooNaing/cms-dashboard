@@ -185,7 +185,7 @@ const Header = () => {
                   <img
                     src={displayedPreview}
                     alt="Selected website logo preview"
-                    className="h-auto max-h-32 w-auto max-w-full object-contain"
+                    className="h-auto max-h-32 w-auto max-w-full rounded-3xl object-contain"
                   />
                 )}
 
