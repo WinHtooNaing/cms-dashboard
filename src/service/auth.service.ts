@@ -37,3 +37,30 @@ export const loginUser = async (
 
   return response.data.data;
 };
+
+export async function logoutUser() {
+  const refreshToken = localStorage.getItem("refreshToken")
+
+  if (!refreshToken) {
+    throw new Error("Refresh token not found")
+  }
+
+  const response = await api.post(
+    "/auth/logout",
+    {
+      refreshToken,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+      },
+    }
+  )
+
+  return response
+}
+export function clearAuthStorage() {
+  localStorage.removeItem("accessToken")
+  localStorage.removeItem("refreshToken")
+  localStorage.removeItem("user")
+}

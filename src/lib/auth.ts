@@ -22,9 +22,3 @@ export function getCurrentUser(): AuthUser | null {
     return null
   }
 }
-
-export function logout() {
-  localStorage.removeItem("accessToken")
-  localStorage.removeItem("refreshToken")
-  localStorage.removeItem("user")
-}
