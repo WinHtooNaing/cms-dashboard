@@ -89,6 +89,27 @@ const Settings = () => {
                     render={({ field, fieldState }) => (
                       <Field>
                         <FieldLabel htmlFor="email" className="text-primary">
+                          Name
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="name"
+                          type="text"
+                          placeholder="John Doe"
+                          className={`${fieldState.invalid ? "border-red-500" : ""}`}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="email"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor="email" className="text-primary">
                           Email
                         </FieldLabel>
                         <Input

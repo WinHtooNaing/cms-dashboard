@@ -1,6 +1,7 @@
 import CategoryDialog from "@/components/home/CategoryDialog"
 import { Button } from "@/components/ui/button"
 import type { Category as CategoryType } from "@/types/category"
+import CategorySkeleton from "@/components/skeletons/CategorySkeleton"
 import {
   getCategories,
   createCategory,
@@ -43,9 +44,11 @@ const Category = () => {
   const [categories, setCategories] = useState<CategoryType[]>([])
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(
-    null
-  )
+  const [selectedUpdateCategory, setSelectedUpdateCategory] =
+    useState<CategoryType | null>(null)
+
+  const [selectedDeleteCategory, setSelectedDeleteCategory] =
+    useState<CategoryType | null>(null)
   const [isUpdateOpen, setIsUpdateOpen] = useState(false)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -65,39 +68,38 @@ const Category = () => {
 
   const currentCategories = categories.slice(startIndex, endIndex)
   async function handleUpdateCategory(formData: FormData) {
-    if (!selectedCategory) return
+    if (!selectedUpdateCategory) return
 
-    await updateCategory(selectedCategory.id, formData)
+    try {
+      await updateCategory(selectedUpdateCategory.id, formData)
 
-    setIsUpdateOpen(false)
+      setIsUpdateOpen(false)
+      setSelectedUpdateCategory(null)
 
-    setSelectedCategory(null)
-
-    await fetchCategories()
+      await fetchCategories()
+    } catch (error) {
+      console.error("Failed to update category:", error)
+      throw error
+    }
   }
   async function handleDeleteCategory() {
-    if (!selectedCategory) return
+    if (!selectedDeleteCategory) return
 
     try {
       setIsDeleting(true)
 
-      await deleteCategory(selectedCategory.id)
+      await deleteCategory(selectedDeleteCategory.id)
 
       setCategories((prev) =>
-        prev.filter((category) => category.id !== selectedCategory.id)
+        prev.filter((category) => category.id !== selectedDeleteCategory.id)
       )
 
-      const remainingCategories = categories.length - 1
-      const newTotalPages = Math.ceil(remainingCategories / itemsPerPage)
-
-      setCurrentPage((prev) => Math.min(prev, Math.max(1, newTotalPages)))
-
-      toast.success("Category deleted successfully")
+      toast.success("Category deleted successfully!")
 
       setIsDeleteOpen(false)
-      setSelectedCategory(null)
+      setSelectedDeleteCategory(null)
     } catch (error) {
-      console.error("Failed to delete category:", error)
+      console.error("Delete category error:", error)
 
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message
@@ -105,7 +107,7 @@ const Category = () => {
         toast.error(
           Array.isArray(message)
             ? message.join(", ")
-            : message || "Failed to delete category"
+            : message || "Failed to delete category."
         )
       } else {
         toast.error("Something went wrong. Please try again.")
@@ -248,6 +250,7 @@ const Category = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isLoading && <CategorySkeleton />}
           {!isLoading && error && (
             <div className="col-span-full flex flex-col items-center gap-3 py-12">
               <p className="text-sm text-destructive">{error.message}</p>
@@ -294,7 +297,7 @@ const Category = () => {
                       size="icon-sm"
                       aria-label={`Update ${category.name}`}
                       onClick={() => {
-                        setSelectedCategory(category)
+                        setSelectedUpdateCategory(category)
                         setIsUpdateOpen(true)
                       }}
                     >
@@ -307,7 +310,7 @@ const Category = () => {
                       className="text-destructive hover:text-destructive"
                       aria-label={`Delete ${category.name}`}
                       onClick={() => {
-                        setSelectedCategory(category)
+                        setSelectedDeleteCategory(category)
                         setIsDeleteOpen(true)
                       }}
                     >
@@ -317,63 +320,8 @@ const Category = () => {
                 </div>
               </Card>
             ))}
-          <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Delete Category</DialogTitle>
-
-                <DialogDescription>
-                  Are you sure you want to delete{" "}
-                  <span className="font-semibold text-foreground">
-                    {selectedCategory?.name}
-                  </span>
-                  ?
-                  <br />
-                  This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsDeleteOpen(false)
-                    setSelectedCategory(null)
-                  }}
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </Button>
-
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteCategory}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog
-            open={isUpdateOpen}
-            onOpenChange={(open) => {
-              setIsUpdateOpen(open)
-
-              if (!open) {
-                setSelectedCategory(null)
-              }
-            }}
-          >
-            {selectedCategory && (
-              <CategoryDialog
-                mode="update"
-                category={selectedCategory}
-                onSave={handleUpdateCategory}
-              />
-            )}
-          </Dialog>
         </CardContent>
+
         {!isLoading && !error && totalPages > 1 && (
           <div className="flex justify-center pb-4">
             <Pagination>
@@ -423,6 +371,69 @@ const Category = () => {
           </div>
         )}
       </Card>
+      <Dialog
+        open={isDeleteOpen}
+        onOpenChange={(open) => {
+          setIsDeleteOpen(open)
+
+          if (!open) {
+            setSelectedDeleteCategory(null)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Category</DialogTitle>
+
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {selectedDeleteCategory?.name}
+              </span>
+              ?
+              <br />
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCategory}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isUpdateOpen}
+        onOpenChange={(open) => {
+          setIsUpdateOpen(open)
+
+          if (!open) {
+            setSelectedUpdateCategory(null)
+          }
+        }}
+      >
+        {selectedUpdateCategory && (
+          <CategoryDialog
+            key={selectedUpdateCategory.id}
+            mode="update"
+            category={selectedUpdateCategory}
+            onSave={handleUpdateCategory}
+          />
+        )}
+      </Dialog>
     </div>
   )
 }
