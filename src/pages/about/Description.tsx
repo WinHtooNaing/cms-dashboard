@@ -16,7 +16,7 @@ import FieldError from "@/components/error/FieldError"
 import {
   introductionSchema,
   type IntroductionFormValues,
-} from "@/types/aboutSchema"
+} from "@/schemas/aboutSchema"
 import {
   Table,
   TableBody,

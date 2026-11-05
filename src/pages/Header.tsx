@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import CURRENT_LOGO from "../assets/logo/logo.png"
 import DEFAULT_LOGO from "../assets/logo/choosePhoto.png"
 
-import { headerSchema, type HeaderFormValues } from "@/types/headerSchema"
+import { headerSchema, type HeaderFormValues } from "@/schemas/headerSchema"
 import { Input } from "@/components/ui/input"
 
 const REQUIRED_WIDTH = 300

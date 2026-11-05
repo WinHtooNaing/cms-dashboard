@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
-import { loginSchema } from "@/types/loginSchema"
+import { loginSchema } from "@/schemas/loginSchema"
 const Settings = () => {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -83,6 +83,27 @@ const Settings = () => {
             <CardContent>
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <FieldGroup>
+                  <Controller
+                    name="email"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field>
+                        <FieldLabel htmlFor="email" className="text-primary">
+                          Name
+                        </FieldLabel>
+                        <Input
+                          {...field}
+                          id="name"
+                          type="text"
+                          placeholder="John Doe"
+                          className={`${fieldState.invalid ? "border-red-500" : ""}`}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
                   <Controller
                     name="email"
                     control={form.control}

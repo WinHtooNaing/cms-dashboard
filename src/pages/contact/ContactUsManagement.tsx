@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Clock3, Mail, MapPin, Pencil, Phone } from "lucide-react"
 
 import { formatBusinessHours } from "@/util/formatBusinessHours"
-import { type ContactUsValues } from "@/types/contactUsSchema"
+import { type ContactUsValues } from "@/schemas/contactUsSchema"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import GetInTouchFormDialog from "@/components/contactUs/GetInTouchFormDialog"

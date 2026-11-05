@@ -38,7 +38,7 @@ import FieldError from "../error/FieldError"
 import {
   aboutContentSchema,
   type AboutContentFormValues,
-} from "@/types/aboutSchema"
+} from "@/schemas/aboutSchema"
 
 export type AboutContentItem = AboutContentFormValues & {
   id: string

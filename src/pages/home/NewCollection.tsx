@@ -95,7 +95,7 @@ const NewCollection = () => {
                     className="overflow-hidden rounded-xl border bg-card"
                   >
                     <img
-                      src={category.image}
+                      src={category.imageUrl}
                       alt={category.name}
                       className="aspect-square w-full object-cover"
                     />
@@ -124,7 +124,7 @@ const NewCollection = () => {
                   >
                     <input type="checkbox" className="size-4 accent-primary" />
                     <img
-                      src={category.image}
+                      src={category.imageUrl}
                       alt=""
                       className="size-10 rounded-md object-cover"
                     />
@@ -153,16 +153,13 @@ const NewCollection = () => {
           {categories.map((category) => (
             <Card key={category.id} className="overflow-hidden py-0">
               <img
-                src={category.image}
+                src={category.imageUrl}
                 alt={category.name}
                 className="aspect-4/3 w-full object-cover"
               />
               <div className="flex items-center justify-between gap-2 p-3">
                 <div>
                   <p className="font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Hidden from home
-                  </p>
                 </div>
               </div>
             </Card>

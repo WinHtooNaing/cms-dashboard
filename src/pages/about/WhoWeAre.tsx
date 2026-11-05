@@ -33,12 +33,12 @@ import {
   whoWeAreSchema,
   type featureContentFormValues,
   type WhoWeAreFormValues,
-} from "@/types/aboutSchema"
+} from "@/schemas/aboutSchema"
 
 import {
   aboutContentSchema,
   type AboutContentFormValues,
-} from "@/types/aboutSchema"
+} from "@/schemas/aboutSchema"
 
 type Feature = featureContentFormValues & {
   id: string

@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { categories, type Product } from "@/data/categories"
-import { ProductSchema } from "@/types/productSchema"
+import { ProductSchema } from "@/schemas/productSchema"
 import { Textarea } from "../ui/textarea"
 import {
   Select,

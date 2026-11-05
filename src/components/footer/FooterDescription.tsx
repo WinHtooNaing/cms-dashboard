@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   footerDescriptionSchema,
   type FooterDescriptionValues,
-} from "@/types/footerSchema"
+} from "@/schemas/footerSchema"
 
 import FieldError from "../error/FieldError"
 

@@ -2,7 +2,10 @@ import { useEffect } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-import { socialLinksSchema, type SocialLinksValues } from "@/types/footerSchema"
+import {
+  socialLinksSchema,
+  type SocialLinksValues,
+} from "@/schemas/footerSchema"
 
 import FieldError from "../error/FieldError"
 
