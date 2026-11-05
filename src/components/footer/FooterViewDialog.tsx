@@ -10,7 +10,7 @@ import type {
   FooterDescriptionValues,
   SupportLinksValues,
   SocialLinksValues,
-} from "@/types/footerSchema"
+} from "@/schemas/footerSchema"
 
 export type FooterViewType = "description" | "support" | "contact" | "social"
 

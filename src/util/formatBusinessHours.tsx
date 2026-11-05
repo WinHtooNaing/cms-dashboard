@@ -1,4 +1,4 @@
-import type { ContactUsValues } from "@/types/contactUsSchema"
+import type { ContactUsValues } from "@/schemas/contactUsSchema"
 
 const dayAbbreviations: Record<ContactUsValues["workingDays"][number], string> =
   {

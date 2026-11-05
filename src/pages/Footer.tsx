@@ -13,7 +13,7 @@ import type {
   FooterDescriptionValues,
   SupportLinksValues,
   SocialLinksValues,
-} from "@/types/footerSchema"
+} from "@/schemas/footerSchema"
 import FooterSectionCard from "@/components/footer/FooterSectionCard"
 
 const FooterManagement = () => {

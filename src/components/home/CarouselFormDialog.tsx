@@ -8,7 +8,7 @@ import { ImagePlus, Upload } from "lucide-react"
 
 import type { Carousel, CarouselFormValues } from "@/types/carousel"
 
-import { carouselSchema } from "@/types/carouselSchema"
+import { carouselSchema } from "@/schemas/carouselSchema"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

@@ -13,7 +13,7 @@ import {
   contactUsSchema,
   daysOfWeek,
   type ContactUsValues,
-} from "@/types/contactUsSchema"
+} from "@/schemas/contactUsSchema"
 
 import { Controller, useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"

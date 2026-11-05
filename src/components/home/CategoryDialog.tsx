@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react"
-
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-
 import * as z from "zod"
 
 import { ImagePlus, X } from "lucide-react"
 import { toast } from "sonner"
-
-import { categorySchema } from "@/types/categorySchema"
-
+import type { Category } from "@/types/category"
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "@/schemas/categorySchema"
 import {
   DialogClose,
   DialogContent,
@@ -31,17 +31,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "../ui/button"
 import axios from "axios"
 
-type CategoryItem = {
-  id: number
-  name: string
-  image: string
-}
-
-type CategoryFormValues = z.infer<typeof categorySchema>
-
 type CategoryDialogProps = {
   mode: "create" | "update"
-  category?: CategoryItem
+  category?: Category
   onSave: (formData: FormData) => Promise<void>
 }
 
@@ -51,17 +43,32 @@ export default function CategoryDialog({
   onSave,
 }: CategoryDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [preview, setPreview] = useState<string | null>(category?.image ?? null)
+
+  const [preview, setPreview] = useState<string | null>(
+    category?.imageUrl ?? null
+  )
+
+  type CategoryFormValues = z.infer<typeof updateCategorySchema>
+
+  const activeSchema =
+    mode === "create" ? createCategorySchema : updateCategorySchema
 
   const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
+    resolver: zodResolver(activeSchema) as Resolver<CategoryFormValues>,
     defaultValues: {
       name: category?.name ?? "",
       image: undefined,
     },
   })
-
   const selectedImage = form.watch("image")
+  useEffect(() => {
+    form.reset({
+      name: category?.name ?? "",
+      image: undefined,
+    })
+
+    setPreview(category?.imageUrl ?? null)
+  }, [category, form])
 
   useEffect(() => {
     if (selectedImage?.[0]) {
@@ -90,8 +97,9 @@ export default function CategoryDialog({
 
       formData.append("name", data.name.trim())
       formData.append("slug", generateSlug(data.name))
-      formData.append("description", "")
-      formData.append("isActive", "true")
+
+      formData.append("description", category?.description ?? "")
+      formData.append("isActive", String(category?.isActive ?? true))
 
       if (data.image?.[0]) {
         formData.append("image", data.image[0])
@@ -109,10 +117,14 @@ export default function CategoryDialog({
       setPreview(null)
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.log("Backend error:", error.response?.data)
+        console.error("Backend error:", error.response?.data)
+
+        const message = error.response?.data?.message
 
         toast.error(
-          error.response?.data?.message || "Failed to create category."
+          Array.isArray(message)
+            ? message.join(", ")
+            : message || `Failed to ${mode} category.`
         )
       } else {
         console.error(error)

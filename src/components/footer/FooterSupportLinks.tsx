@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   supportLinksSchema,
   type SupportLinksValues,
-} from "@/types/footerSchema"
+} from "@/schemas/footerSchema"
 
 import FieldError from "../error/FieldError"
 import { Button } from "@/components/ui/button"
