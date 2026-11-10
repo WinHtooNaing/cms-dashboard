@@ -1,6 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table"
-import { ArrowUpDown, Eye } from "lucide-react"
-
+import { ArrowUpDown } from "lucide-react"
+import OrderActions from "./OrderAction"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -13,7 +13,9 @@ type OrderTableData = Order & {
 }
 
 type ColumnsProps = {
-  onView: (order: Order) => void
+  onUpdateStatus: (order: Order, status: OrderStatus) => void | Promise<void>
+
+  onCancel: (order: Order) => void | Promise<void>
 }
 
 const columnHelper = createColumnHelper<OrderTableFeatures, OrderTableData>()
@@ -32,7 +34,7 @@ export const getStatusStyle = (status: OrderStatus) => {
 export const formatPrice = (price: number) =>
   `${price.toLocaleString("en-US")} MMK`
 
-export const columns = ({ onView }: ColumnsProps) =>
+export const columns = ({ onUpdateStatus, onCancel }: ColumnsProps) =>
   columnHelper.columns([
     // Order ID
     columnHelper.accessor("id", {
@@ -117,15 +119,13 @@ export const columns = ({ onView }: ColumnsProps) =>
       id: "actions",
       header: "Actions",
       enableSorting: false,
+
       cell: ({ row }) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onView(row.original)}
-        >
-          <Eye className="mr-2 size-4" />
-          View
-        </Button>
+        <OrderActions
+          order={row.original}
+          onUpdateStatus={onUpdateStatus}
+          onCancel={onCancel}
+        />
       ),
     }),
   ])

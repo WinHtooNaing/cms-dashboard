@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 import { getApiErrorMessage } from "@/lib/api-error"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
@@ -22,6 +24,7 @@ import * as z from "zod"
 import { loginSchema } from "@/schemas/loginSchema"
 import { loginUser } from "@/service/auth.service"
 export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false)
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -52,6 +55,7 @@ export function LoginForm() {
       toast.error(getApiErrorMessage(error))
     }
   }
+
   return (
     <div>
       <Card>
@@ -92,18 +96,38 @@ export function LoginForm() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field>
-                    <div className="flex items-center">
-                      <FieldLabel htmlFor="password" className="text-primary">
-                        Password
-                      </FieldLabel>
+                    <FieldLabel htmlFor="password" className="text-primary">
+                      Password
+                    </FieldLabel>
+
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className={`pr-10 ${
+                          fieldState.invalid ? "border-red-500" : ""
+                        }`}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute top-1/2 right-1 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="size-4" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                      </Button>
                     </div>
 
-                    <Input
-                      {...field}
-                      id="password"
-                      type="password"
-                      className={`${fieldState.invalid ? "border-red-500" : ""}`}
-                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

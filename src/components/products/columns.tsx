@@ -1,21 +1,10 @@
-import {
-  columnFilteringFeature,
-  columnVisibilityFeature,
-  createColumnHelper,
-  createFilteredRowModel,
-  createPaginatedRowModel,
-  createSortedRowModel,
-  filterFn_includesString,
-  rowPaginationFeature,
-  rowSelectionFeature,
-  rowSortingFeature,
-  sortFn_alphanumeric,
-  sortFn_text,
-  tableFeatures,
-} from "@tanstack/react-table"
-import { Eye, MoreHorizontal, SquarePen, Trash } from "lucide-react"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
-import ProductDialog from "./ProductDialog"
+import { createColumnHelper } from "@tanstack/react-table"
+import type { Product } from "@/types/product"
+import { Eye, MoreHorizontal, SquarePen, Star } from "lucide-react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,109 +12,144 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Dialog } from "@/components/ui/dialog"
 
-import { type Product } from "@/data/categories"
-import { Link } from "react-router-dom"
+import ProductDialog from "./ProductDialog"
 
-const features = tableFeatures({
-  columnFilteringFeature,
-  columnVisibilityFeature,
-  rowPaginationFeature,
-  rowSelectionFeature,
-  rowSortingFeature,
-  filteredRowModel: createFilteredRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-  sortedRowModel: createSortedRowModel(),
-  filterFns: { includesString: filterFn_includesString },
-  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
-})
-console.log(features)
+import { getProductRating } from "@/util/product-meta"
+
+import { features } from "./product-table-features"
+function ProductActions({ product }: { product: Product }) {
+  const [isEditOpen, setIsEditOpen] = useState(false)
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+          <MoreHorizontal className="size-5" />
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuGroup>
+            {/* View */}
+            <DropdownMenuItem
+              render={
+                <Link to={`/products/${product.id}`}>
+                  <Eye className="mr-2 size-4" />
+                  View
+                </Link>
+              }
+            />
+
+            {/* Edit */}
+            <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+              <SquarePen className="mr-2 size-4" />
+              Edit
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <ProductDialog mode="update" product={product} />
+      </Dialog>
+    </>
+  )
+}
 const columnHelper = createColumnHelper<typeof features, Product>()
 
 export const columns = columnHelper.columns([
+  // Number
   columnHelper.display({
     id: "NO",
     header: () => <p>NO</p>,
     cell: ({ row }) => <p>{row.index + 1}</p>,
-    enableSorting: false,
     enableHiding: false,
   }),
+
+  // Product Name
   columnHelper.accessor("name", {
     header: "Product Name",
-    cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
   }),
+
+  // Description
   columnHelper.accessor("description", {
     header: "Description",
     cell: ({ row }) => (
-      <div>{(row.getValue("description") as string).slice(0, 20)}...</div>
-    ),
-  }),
-  columnHelper.accessor("category", {
-    header: "Category",
-    cell: ({ row }) => <div>{row.getValue("category")}</div>,
-  }),
-  columnHelper.accessor("brand", {
-    header: "Brand",
-    cell: ({ row }) => <div>{row.getValue("brand")}</div>,
-  }),
-  columnHelper.accessor("price", {
-    header: "Price",
-    cell: ({ row }) => <div>{row.getValue("price")} (ks)</div>,
-  }),
-  columnHelper.accessor("stock", {
-    header: "stock",
-    cell: ({ row }) => (
-      <div
-        className={row.getValue<number>("stock") <= 10 ? "text-red-500" : ""}
-      >
-        {row.getValue("stock")}
+      <div className="max-w-50 truncate" title={row.original.description}>
+        {row.original.description}
       </div>
     ),
   }),
-  columnHelper.accessor("rating", {
-    header: "Rating",
-    cell: ({ row }) => <div>{row.getValue("rating")}</div>,
+
+  // Category
+  columnHelper.display({
+    id: "category",
+    header: "Category",
+    cell: ({ row }) => <div>{row.original.category?.name ?? "Unknown"}</div>,
   }),
+
+  {
+    accessorKey: "brand",
+    header: "Brand",
+    cell: ({ row }) => {
+      return row.original.brand?.name ?? "Unknown"
+    },
+  },
+
+  // Price
+  columnHelper.accessor("price", {
+    header: "Price",
+    cell: ({ row }) => (
+      <div className="font-medium">
+        {Number(row.original.price).toLocaleString()} Ks
+      </div>
+    ),
+  }),
+
+  // Stock
+  columnHelper.display({
+    id: "stock",
+    header: "Stock",
+    cell: ({ row }) => {
+      const quantity = row.original.stock?.availableQuantity ?? 0
+
+      return (
+        <div
+          className={
+            quantity <= 10
+              ? "font-medium text-red-500"
+              : "font-medium text-green-600"
+          }
+        >
+          {quantity}
+        </div>
+      )
+    },
+  }),
+
+  // Rating - Static for now
+  columnHelper.display({
+    id: "rating",
+    header: "Rating",
+    cell: ({ row }) => {
+      const rating = getProductRating(row.original.id)
+
+      return (
+        <div className="flex items-center gap-1">
+          <Star className="size-4 fill-yellow-400 text-yellow-400" />
+          <span>{rating}</span>
+        </div>
+      )
+    },
+  }),
+
+  // Actions
   columnHelper.display({
     id: "actions",
     header: () => <p>Actions</p>,
     enableHiding: false,
-
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <MoreHorizontal />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-30">
-            <DropdownMenuGroup>
-              <Link to={`/products/${row.original.id}`}>
-                <DropdownMenuItem>
-                  <Eye /> View
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem
-                render={
-                  <Dialog>
-                    <DialogTrigger>
-                      <div className="flex items-center gap-2 px-2 text-sm">
-                        <SquarePen className="size-4" />
-                        Edit
-                      </div>
-                    </DialogTrigger>
-                    <ProductDialog mode="update" product={row.original} />
-                  </Dialog>
-                }
-              />
-
-              <DropdownMenuItem className="text-destructive">
-                <Trash />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    cell: ({ row }) => <ProductActions product={row.original} />,
   }),
 ])

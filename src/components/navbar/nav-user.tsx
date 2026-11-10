@@ -21,7 +21,8 @@ import { ChevronsUpDownIcon, LogOutIcon, Settings } from "lucide-react"
 
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { logout } from "@/lib/auth"
+import { logoutUser } from "@/service/auth.service"
+import { clearAuthStorage } from "@/lib/auth"
 
 type User = {
   name: string
@@ -33,12 +34,18 @@ export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
+  async function handleLogout() {
+    try {
+      await logoutUser()
 
-    toast.success("Logged out successfully!")
+      toast.success("Logged out successfully")
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      clearAuthStorage()
 
-    navigate("/login", { replace: true })
+      navigate("/login", { replace: true })
+    }
   }
 
   const initials = user.name

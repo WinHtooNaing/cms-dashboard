@@ -1,25 +1,30 @@
 import * as React from "react"
+
 import {
-  columnFilteringFeature,
   columnVisibilityFeature,
-  createFilteredRowModel,
-  createPaginatedRowModel,
-  createSortedRowModel,
-  filterFn_includesString,
-  rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
-  sortFn_alphanumeric,
-  sortFn_text,
   tableFeatures,
   useTable,
-  type ColumnFiltersState,
   type ColumnVisibilityState,
   type SortingState,
 } from "@tanstack/react-table"
+import ProductTableSkeleton from "@/components/skeletons/ProductTableSkeleton"
+import { useQuery } from "@tanstack/react-query"
+
 import { ChevronDown, Plus } from "lucide-react"
+
 import { columns } from "./columns"
+
+import { getProducts } from "@/service/product.service"
+
+import type { Product } from "@/types/product"
+
+import { getProductRating } from "@/util/product-meta"
+
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,8 +32,9 @@ import {
   DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+
 import {
   Table,
   TableBody,
@@ -37,41 +43,86 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { products } from "@/data/categories"
-import ProductDialog from "../../components/products/ProductDialog"
+
+import ProductDialog from "@/components/products/ProductDialog"
 const features = tableFeatures({
-  columnFilteringFeature,
   columnVisibilityFeature,
-  rowPaginationFeature,
   rowSelectionFeature,
   rowSortingFeature,
-  filteredRowModel: createFilteredRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-  sortedRowModel: createSortedRowModel(),
-  filterFns: { includesString: filterFn_includesString },
-  sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
 })
-
 export default function ProductTable() {
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<ColumnVisibilityState>({})
+
   const [rowSelection, setRowSelection] = React.useState({})
 
+  const [search, setSearch] = React.useState("")
+  const [debouncedSearch, setDebouncedSearch] = React.useState("")
+
+  const [page, setPage] = React.useState(1)
+  const [limit] = React.useState(8)
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [search])
+
+  // Fetch products
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ["products", page, limit, debouncedSearch, sorting],
+
+    queryFn: () =>
+      getProducts({
+        page,
+        limit,
+
+        search: debouncedSearch || undefined,
+
+        sortBy:
+          sorting[0]?.id === "name"
+            ? "name"
+            : sorting[0]?.id === "price"
+              ? "price"
+              : "createdAt",
+
+        sortOrder: sorting[0]?.desc ? "desc" : "asc",
+      }),
+
+    placeholderData: (previousData) => previousData,
+  })
+
+  const products: Product[] = React.useMemo(() => {
+    return (data?.items ?? []).map((product) => ({
+      ...product,
+      rating: getProductRating(product.id),
+    }))
+  }, [data?.items])
+
+  const pagination = data?.pagination
+
+  // TanStack Table
   const table = useTable({
     features,
     data: products,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+
+    onSortingChange: (updater) => {
+      setSorting(updater)
+      setPage(1)
+    },
+
     onColumnVisibilityChange: setColumnVisibility,
+
     onRowSelectionChange: setRowSelection,
+
     state: {
       sorting,
-      columnFilters,
       columnVisibility,
       rowSelection,
     },
@@ -79,107 +130,87 @@ export default function ProductTable() {
 
   return (
     <div className="w-full">
+      {/* Toolbar */}
       <div className="flex justify-between gap-2 py-4 max-sm:flex-col">
         <div className="flex gap-2 max-sm:flex-col">
+          {/* Search */}
           <Input
             placeholder="Search Products..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="sm:max-w-sm"
           />
-          <div className="flex gap-2 max-sm:flex-col">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button className="w-full sm:w-auto" variant="outline" />
-                }
-              >
-                Category <ChevronDown />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuGroup>
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      )
-                    })}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button className="w-full sm:w-auto" variant="outline" />
-                }
-              >
-                Brand <ChevronDown />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuGroup>
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      )
-                    })}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {/* Column Visibility */}
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="outline" />}>
+              Columns <ChevronDown />
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuGroup>
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <div className="max-sm:flex max-sm:flex-col">
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Plus /> Add Product
-            </DialogTrigger>
-            <ProductDialog mode="create" />
-          </Dialog>
-        </div>
+
+        {/* Add Product */}
+        <Dialog>
+          <DialogTrigger render={<Button />}>
+            <Plus /> Add Product
+          </DialogTrigger>
+
+          <ProductDialog mode="create" />
+        </Dialog>
       </div>
+
+      {/* Table */}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <table.FlexRender header={header} />
-                      )}
-                    </TableHead>
-                  )
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : (
+                      <table.FlexRender header={header} />
+                    )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <ProductTableSkeleton rowCount={8} />
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-destructive"
+                >
+                  {error instanceof Error
+                    ? error.message
+                    : "Failed to load products."}
+                </TableCell>
+              </TableRow>
+            ) : products.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -198,32 +229,40 @@ export default function ProductTable() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No products found.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between py-4">
+        <div className="text-sm text-muted-foreground">
+          Showing {products.length} of {pagination?.total ?? 0} products
+          {isFetching && <span className="ml-2">Updating...</span>}
         </div>
-        <div className="space-x-2">
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
+          </span>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPage((prev) => prev - 1)}
+            disabled={page <= 1 || isFetching}
           >
             Previous
           </Button>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPage((prev) => prev + 1)}
+            disabled={page >= (pagination?.totalPages ?? 1) || isFetching}
           >
             Next
           </Button>

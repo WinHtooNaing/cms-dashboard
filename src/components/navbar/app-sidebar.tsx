@@ -18,7 +18,9 @@ import {
   House,
   Info,
   ListOrderedIcon,
+  ScratchBlocks,
   Settings2,
+  User,
 } from "lucide-react"
 
 import { Logo } from "./logo"
@@ -67,6 +69,21 @@ const data = {
       url: "/order",
       icon: ListOrderedIcon,
       items: [{ title: "Order", url: "/order" }],
+    },
+    {
+      title: "Stock",
+      url: "/stock",
+      icon: ScratchBlocks,
+      items: [{ title: "Stock", url: "/stock" }],
+    },
+    {
+      title: "User Management",
+      url: "/users",
+      icon: User,
+      items: [
+        { title: "Users", url: "/users" },
+        { title: "Roles", url: "/roles" },
+      ],
     },
   ],
 

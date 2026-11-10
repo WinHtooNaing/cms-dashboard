@@ -22,14 +22,14 @@ export async function getCategories(): Promise<Category[]> {
   return response.data.data
 }
 
-export async function getCategoryById(id: number): Promise<Category> {
+export async function getCategoryById(id: string): Promise<Category> {
   const response = await api.get(`/categories/${id}`)
 
   return response.data.data
 }
 
 
-export async function updateCategory(id: number, formData: FormData) {
+export async function updateCategory(id: string, formData: FormData) {
   const token = localStorage.getItem("accessToken")
 
   const response = await api.patch(`/categories/${id}`, formData, {
@@ -40,7 +40,7 @@ export async function updateCategory(id: number, formData: FormData) {
 
   return response.data.data
 }
-export async function deleteCategory(id: number) {
+export async function deleteCategory(id: string) {
   const token = localStorage.getItem("accessToken")
 
   const response = await api.delete(`/categories/${id}`, {

@@ -21,6 +21,7 @@ export type Order = {
   status: OrderStatus
 }
 
+
 export const orders: Order[] = [
   {
     id: "ORD-001",
@@ -30,10 +31,7 @@ export const orders: Order[] = [
       phone: "+95 9 123456789",
       address: "Sanchaung Township, Yangon, Myanmar",
     },
-    items: [
-      { productId: 1, quantity: 1 },
-      { productId: 7, quantity: 2 },
-    ],
+    items: [{ productId: 1, quantity: 1 }],
     orderDate: "2026-11-01",
     status: "Pending",
   },

@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 
 import { Toaster } from "sonner"
-
+import OrderDetailsPage from "./components/orders/OrderDetailsPage"
 import Main from "./layouts/Main"
 import Login from "./pages/auth/Login"
 
@@ -28,8 +28,10 @@ import Order from "./pages/order/Orders"
 
 import { GuestRoute } from "./components/auth/GuestRoute"
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"
+import Stock from "./pages/stock/Stock"
+import UserManagement from "./pages/user/Users"
+import RolesPage from "./pages/role/Roles"
 
-// Create router outside App to avoid recreating it on every render.
 const router = createBrowserRouter([
   // Guest routes
   {
@@ -101,6 +103,22 @@ const router = createBrowserRouter([
           {
             path: "order",
             element: <Order />,
+          },
+          {
+            path: "stock",
+            element: <Stock />,
+          },
+          {
+            path: "users",
+            element: <UserManagement />,
+          },
+          {
+            path: "roles",
+            element: <RolesPage />,
+          },
+          {
+            path: "/order/:id",
+            element: <OrderDetailsPage />,
           },
           {
             path: "header",
