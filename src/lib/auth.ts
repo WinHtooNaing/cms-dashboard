@@ -1,14 +1,15 @@
 export type AuthUser = {
-  id: number
+  id: string
   name: string
   email: string
-  phone: string
+  phone: string | null
+  roleId: string
   role: "ADMIN" | "CUSTOMER"
   isActive: boolean
 }
 
 export function isAuthenticated(): boolean {
-  return Boolean(localStorage.getItem("accessToken"))
+  return Boolean(localStorage.getItem("refreshToken"))
 }
 
 export function getCurrentUser(): AuthUser | null {
@@ -21,4 +22,10 @@ export function getCurrentUser(): AuthUser | null {
   } catch {
     return null
   }
+}
+
+export function clearAuthStorage() {
+  localStorage.removeItem("accessToken")
+  localStorage.removeItem("refreshToken")
+  localStorage.removeItem("user")
 }

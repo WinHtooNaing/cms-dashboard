@@ -13,6 +13,11 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { generateSlug } from "@/util/generate-slug"
+import { getBrands } from "@/service/brand.service"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { getCategories } from "@/service/category.service"
+
 import { Input } from "@/components/ui/input"
 import { ImagePlus } from "lucide-react"
 import { Button } from "../ui/button"
@@ -20,7 +25,8 @@ import { Button } from "../ui/button"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Controller, useForm } from "react-hook-form"
-import { categories, type Product } from "@/data/categories"
+import type { Product } from "@/types/product"
+import { getApiErrorMessage } from "@/lib/api-error"
 import { ProductSchema } from "@/schemas/productSchema"
 import { Textarea } from "../ui/textarea"
 import {
@@ -31,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { toast } from "sonner"
+import { createProduct } from "@/service/product.service"
 export default function CategoryDialog({
   mode,
   product,
@@ -38,25 +46,66 @@ export default function CategoryDialog({
   mode: "create" | "update"
   product?: Product
 }) {
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  })
+
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: getBrands,
+  })
   const form = useForm<z.infer<typeof ProductSchema>>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
       name: product?.name ?? "",
-      brand: product?.brand ?? "",
-      price: product?.price ?? 0,
-      originalPrice: product?.originalPrice ?? 0,
+      sku: product?.sku ?? "",
+      brandId: product?.brand?.id ?? "",
+      price: Number(product?.price ?? 0),
+      originalPrice: product?.originalPrice
+        ? Number(product.originalPrice)
+        : undefined,
       image: undefined,
-      category: product?.category ?? "",
+      category: product?.categoryId ?? "",
       description: product?.description ?? "",
-      stock: product?.stock ?? 0,
-      rating: product?.rating ?? 0,
     },
   })
   function onSubmit(data: z.infer<typeof ProductSchema>) {
-    console.log("data", data)
+    const payload = {
+      name: data.name,
+      slug: generateSlug(data.name),
+      brandId: data.brandId,
+      sku: data.sku,
+      description: data.description,
+      price: data.price,
+      originalPrice: data.originalPrice,
+      categoryId: data.category,
+      image: data.image?.[0] as File | undefined,
+    }
+
+    createMutation.mutate(payload)
   }
+  const queryClient = useQueryClient()
+
+  const createMutation = useMutation({
+    mutationFn: createProduct,
+
+    onSuccess: () => {
+      toast.success("Product created successfully!")
+
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      })
+
+      form.reset()
+    },
+
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error))
+    },
+  })
   return (
-    <DialogContent className="flex max-h-[85vh] scrollbar-none flex-col overflow-scroll sm:max-w-2xl">
+    <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
       <DialogHeader>
         <DialogTitle>
           {mode === "create" ? "Create product" : "Update product"}
@@ -65,7 +114,10 @@ export default function CategoryDialog({
           Product data contains only name, and image
         </DialogDescription>
       </DialogHeader>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="scrollbar-none overflow-scroll"
+      >
         <FieldGroup className="flex flex-col py-2">
           <div className="flex gap-2">
             <Controller
@@ -88,28 +140,106 @@ export default function CategoryDialog({
             <Controller
               name="category"
               control={form.control}
+              render={({ field, fieldState }) => {
+                const activeCategories = categories.filter(
+                  (category) => category.isActive
+                )
+
+                const categoryItems = activeCategories.map((category) => ({
+                  label: category.name,
+                  value: category.id,
+                }))
+
+                return (
+                  <Field>
+                    <FieldLabel>Product Category</FieldLabel>
+
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={categoryItems}
+                    >
+                      <SelectTrigger
+                        className={`w-full max-w-48 ${
+                          fieldState.error ? "border-red-500" : ""
+                        }`}
+                      >
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectGroup>
+                          {activeCategories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.error && (
+                      <FieldError>{fieldState.error.message}</FieldError>
+                    )}
+                  </Field>
+                )
+              }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Controller
+              name="sku"
+              control={form.control}
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel>Product Category</FieldLabel>
+                  <FieldLabel>SKU</FieldLabel>
+
+                  <Input
+                    {...field}
+                    placeholder="e.g. SAM-S25-001"
+                    className={fieldState.error ? "border-red-500" : ""}
+                  />
+
+                  {fieldState.error && (
+                    <FieldError>{fieldState.error.message}</FieldError>
+                  )}
+                </Field>
+              )}
+            />
+            <Controller
+              name="brandId"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel>Brand</FieldLabel>
+
                   <Select
-                    value={field.value}
-                    onValueChange={(value) => field.onChange(value ?? "")}
+                    value={field.value ?? ""}
+                    onValueChange={field.onChange}
+                    items={brands.map((brand) => ({
+                      label: brand.name,
+                      value: brand.id,
+                    }))}
                   >
                     <SelectTrigger
-                      className={`w-full max-w-48 ${fieldState.error ? "border-red-500" : ""}`}
+                      className={`w-full ${
+                        fieldState.error ? "border-red-500" : ""
+                      }`}
                     >
-                      <SelectValue placeholder="Select a category" />
+                      <SelectValue placeholder="Select a brand" />
                     </SelectTrigger>
+
                     <SelectContent>
                       <SelectGroup>
-                        {categories.map((item) => (
-                          <SelectItem key={item.id} value={item.name}>
-                            {item.name}
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>
+                            {brand.name}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
+
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>
                   )}
@@ -117,13 +247,14 @@ export default function CategoryDialog({
               )}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Controller
               name="price"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel>Price</FieldLabel>
+                  <FieldLabel>Selling Price (Ks)</FieldLabel>
+
                   <Input
                     {...field}
                     value={field.value ?? ""}
@@ -134,55 +265,12 @@ export default function CategoryDialog({
                           : event.target.valueAsNumber
                       )
                     }
-                    placeholder="Price"
                     type="number"
+                    min="0"
+                    placeholder="e.g. 250000"
                     className={fieldState.error ? "border-red-500" : ""}
                   />
-                  {fieldState.error && (
-                    <FieldError>{fieldState.error.message}</FieldError>
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="stock"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>Stock</FieldLabel>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    onChange={(event) =>
-                      field.onChange(
-                        event.target.value === ""
-                          ? undefined
-                          : event.target.valueAsNumber
-                      )
-                    }
-                    placeholder="Stock"
-                    type="number"
-                    className={fieldState.error ? "border-red-500" : ""}
-                  />
-                  {fieldState.error && (
-                    <FieldError>{fieldState.error.message}</FieldError>
-                  )}
-                </Field>
-              )}
-            />
-          </div>
-          <div className="flex gap-2">
-            <Controller
-              name="brand"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>Brand</FieldLabel>
-                  <Input
-                    {...field}
-                    placeholder="Brand"
-                    className={fieldState.error ? "border-red-500" : ""}
-                  />
+
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>
                   )}
@@ -191,13 +279,18 @@ export default function CategoryDialog({
             />
 
             <Controller
-              name="rating"
+              name="originalPrice"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel>Rating</FieldLabel>
+                  <FieldLabel>
+                    Original Price (Ks)
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">
+                      Optional
+                    </span>
+                  </FieldLabel>
+
                   <Input
-                    {...field}
                     value={field.value ?? ""}
                     onChange={(event) =>
                       field.onChange(
@@ -206,10 +299,16 @@ export default function CategoryDialog({
                           : event.target.valueAsNumber
                       )
                     }
-                    placeholder="Rating"
                     type="number"
+                    min="0"
+                    placeholder="e.g. 300000"
                     className={fieldState.error ? "border-red-500" : ""}
                   />
+
+                  <FieldDescription>
+                    Enter this only when the product has a genuine discount.
+                  </FieldDescription>
+
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>
                   )}
@@ -225,9 +324,9 @@ export default function CategoryDialog({
                 <FieldLabel>Image</FieldLabel>
                 <div className="flex items-center gap-3">
                   <div className="flex size-16 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-                    {product?.image && !value ? (
+                    {product?.imageUrl && !value ? (
                       <img
-                        src={product.image}
+                        src={product.imageUrl}
                         alt=""
                         className="size-full object-cover"
                       />
@@ -281,8 +380,12 @@ export default function CategoryDialog({
           <DialogClose render={<Button variant="outline" />}>
             Cancel
           </DialogClose>
-          <Button type="submit">
-            {mode === "create" ? "Create" : "Update"}
+          <Button type="submit" disabled={createMutation.isPending}>
+            {createMutation.isPending
+              ? "Creating..."
+              : mode === "create"
+                ? "Create Product"
+                : "Update Product"}
           </Button>
         </DialogFooter>
       </form>

@@ -21,7 +21,8 @@ import { ChevronsUpDownIcon, LogOutIcon, Settings } from "lucide-react"
 
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { logoutUser, clearAuthStorage } from "@/service/auth.service"
+import { logoutUser } from "@/service/auth.service"
+import { clearAuthStorage } from "@/lib/auth"
 
 type User = {
   name: string
