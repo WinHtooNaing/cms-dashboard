@@ -1,5 +1,4 @@
-import * as React from "react"
-
+import { useState, useEffect, useMemo } from "react"
 import {
   columnVisibilityFeature,
   rowSelectionFeature,
@@ -11,7 +10,7 @@ import {
 } from "@tanstack/react-table"
 import ProductTableSkeleton from "@/components/skeletons/ProductTableSkeleton"
 import { useQuery } from "@tanstack/react-query"
-
+import { useSearchParams } from "react-router-dom"
 import { ChevronDown, Plus } from "lucide-react"
 
 import { columns } from "./columns"
@@ -19,8 +18,6 @@ import { columns } from "./columns"
 import { getProducts } from "@/service/product.service"
 
 import type { Product } from "@/types/product"
-
-import { getProductRating } from "@/util/product-meta"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog } from "@/components/ui/dialog"
 
 import {
   Table,
@@ -51,30 +48,51 @@ const features = tableFeatures({
   rowSortingFeature,
 })
 export default function ProductTable() {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [open, setOpen] = useState(false)
+
+  const [dialogMode, setDialogMode] = useState<"create" | "update">("create")
+
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>()
+  const [sorting, setSorting] = useState<SortingState>([])
 
   const [columnVisibility, setColumnVisibility] =
-    React.useState<ColumnVisibilityState>({})
+    useState<ColumnVisibilityState>({})
 
-  const [rowSelection, setRowSelection] = React.useState({})
+  const [rowSelection, setRowSelection] = useState({})
 
-  const [search, setSearch] = React.useState("")
-  const [debouncedSearch, setDebouncedSearch] = React.useState("")
+  const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
 
-  const [page, setPage] = React.useState(1)
-  const [limit] = React.useState(8)
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  React.useEffect(() => {
+  const page = Math.max(1, Number(searchParams.get("page")) || 1)
+
+  const limit = 8
+
+  const setPage = (newPage: number) => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev)
+
+      params.set("page", String(Math.max(1, newPage)))
+
+      return params
+    })
+  }
+
+  const handleCreate = () => {
+    setSelectedProduct(undefined)
+    setDialogMode("create")
+    setOpen(true)
+  }
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search)
-      setPage(1)
     }, 400)
 
     return () => clearTimeout(timer)
   }, [search])
 
-  // Fetch products
-  const { data, isLoading, isError, error, isFetching } = useQuery({
+  const { data, isPending, isError, error, isFetching } = useQuery({
     queryKey: ["products", page, limit, debouncedSearch, sorting],
 
     queryFn: () =>
@@ -97,16 +115,14 @@ export default function ProductTable() {
     placeholderData: (previousData) => previousData,
   })
 
-  const products: Product[] = React.useMemo(() => {
+  const products: Product[] = useMemo(() => {
     return (data?.items ?? []).map((product) => ({
       ...product,
-      rating: getProductRating(product.id),
     }))
   }, [data?.items])
 
   const pagination = data?.pagination
 
-  // TanStack Table
   const table = useTable({
     features,
     data: products,
@@ -141,7 +157,6 @@ export default function ProductTable() {
             className="sm:max-w-sm"
           />
 
-          {/* Column Visibility */}
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" />}>
               Columns <ChevronDown />
@@ -169,14 +184,9 @@ export default function ProductTable() {
           </DropdownMenu>
         </div>
 
-        {/* Add Product */}
-        <Dialog>
-          <DialogTrigger render={<Button />}>
-            <Plus /> Add Product
-          </DialogTrigger>
-
-          <ProductDialog mode="create" />
-        </Dialog>
+        <Button onClick={handleCreate}>
+          <Plus /> Add Product
+        </Button>
       </div>
 
       {/* Table */}
@@ -197,25 +207,29 @@ export default function ProductTable() {
           </TableHeader>
 
           <TableBody>
-            {isLoading ? (
+            {isPending ? (
               <ProductTableSkeleton rowCount={8} />
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-destructive"
+                  colSpan={table.getVisibleLeafColumns().length}
+                  className="h-32 text-center"
                 >
-                  {error instanceof Error
-                    ? error.message
-                    : "Failed to load products."}
+                  <div className="space-y-1">
+                    <p className="font-medium text-destructive">
+                      Failed to load products
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {error instanceof Error
+                        ? error.message
+                        : "Something went wrong."}
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : products.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       <table.FlexRender cell={cell} />
@@ -226,10 +240,15 @@ export default function ProductTable() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
+                  colSpan={table.getVisibleLeafColumns().length}
+                  className="h-32 text-center"
                 >
-                  No products found.
+                  <div className="space-y-1">
+                    <p className="font-medium">No products found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Try changing your search keywords.
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -252,7 +271,7 @@ export default function ProductTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage((prev) => prev - 1)}
+            onClick={() => setPage(page - 1)}
             disabled={page <= 1 || isFetching}
           >
             Previous
@@ -261,13 +280,20 @@ export default function ProductTable() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setPage((prev) => prev + 1)}
+            onClick={() => setPage(page + 1)}
             disabled={page >= (pagination?.totalPages ?? 1) || isFetching}
           >
             Next
           </Button>
         </div>
       </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <ProductDialog
+          mode={dialogMode}
+          product={selectedProduct}
+          onClose={() => setOpen(false)}
+        />
+      </Dialog>
     </div>
   )
 }

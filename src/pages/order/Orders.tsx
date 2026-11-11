@@ -61,7 +61,7 @@ const Orders = () => {
           Manage and track your customer orders.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         <OverviewCard
           title="Total Orders"
           value={totalOrders}
@@ -70,6 +70,11 @@ const Orders = () => {
 
         <OverviewCard
           title="Pending Orders"
+          value={pendingOrders}
+          icon={<Clock />}
+        />
+        <OverviewCard
+          title="Cancelled Orders"
           value={pendingOrders}
           icon={<Clock />}
         />
