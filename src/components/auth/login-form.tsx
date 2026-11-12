@@ -23,6 +23,8 @@ import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { loginSchema } from "@/schemas/loginSchema"
 import { loginUser } from "@/service/auth.service"
+import { useQueryClient } from "@tanstack/react-query"
+import { currentUserQueryKey } from "@/hooks/useCurrentUser"
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -33,18 +35,17 @@ export function LoginForm() {
     },
   })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     try {
       const response = await loginUser(data)
-
-      const { refreshToken } = response
-
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken)
-      }
+      queryClient.setQueryData(currentUserQueryKey, {
+        user: response.user,
+        permissions: response.permissions,
+      })
       toast.success("Login successful!")
 
-      navigate("/home")
+      navigate("/home", { replace: true })
     } catch (error) {
       toast.error(getApiErrorMessage(error))
     }

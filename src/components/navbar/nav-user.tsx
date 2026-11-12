@@ -23,6 +23,8 @@ import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 import { logoutUser } from "@/service/auth.service"
 import { clearAuthStorage } from "@/lib/auth"
+import { useQueryClient } from "@tanstack/react-query"
+import { currentUserQueryKey } from "@/hooks/useCurrentUser"
 
 type User = {
   name: string
@@ -33,6 +35,7 @@ type User = {
 export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   async function handleLogout() {
     try {
@@ -41,8 +44,13 @@ export function NavUser({ user }: { user: User }) {
       toast.success("Logged out successfully")
     } catch (error) {
       console.error("Logout error:", error)
+      toast.error("Logout request failed. Your local session was cleared.")
     } finally {
       clearAuthStorage()
+
+      queryClient.removeQueries({
+        queryKey: currentUserQueryKey,
+      })
 
       navigate("/login", { replace: true })
     }

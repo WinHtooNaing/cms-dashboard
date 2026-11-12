@@ -25,7 +25,7 @@ import {
 
 import { Logo } from "./logo"
 import { NavMain } from "./nav-main"
-import { getCurrentUser } from "@/lib/auth"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 const data = {
   navMain: [
@@ -102,7 +102,8 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = getCurrentUser()
+  const { data: currentUser } = useCurrentUser()
+  const user = currentUser?.user
 
   return (
     <Sidebar collapsible="icon" {...props}>

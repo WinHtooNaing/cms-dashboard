@@ -5,8 +5,14 @@ import type { AuthUser } from "@/lib/auth"
 import { clearAuthStorage } from "@/lib/auth"
 export interface LoginResponse {
   user: AuthUser
+  permissions: string[]
   accessToken: string
   refreshToken: string
+}
+
+export interface CurrentUserResponse {
+  user: AuthUser
+  permissions: string[]
 }
 
 export interface LoginPayload {
@@ -36,6 +42,11 @@ export const loginUser = async (
   localStorage.setItem("user", JSON.stringify(loginData.user))
 
   return loginData
+}
+
+export const fetchCurrentUser = async (): Promise<CurrentUserResponse> => {
+  const response = await api.get<ApiResponse<CurrentUserResponse>>("/auth/me")
+  return response.data.data
 }
 
 export const refreshAccessToken = async () => {
@@ -68,23 +79,10 @@ export const refreshAccessToken = async () => {
 export async function logoutUser() {
   const refreshToken = localStorage.getItem("refreshToken")
 
-  if (!refreshToken) {
-    throw new Error("Refresh token not found")
-  }
- try {
-  const response = await api.post(
-    "/auth/logout",
-    {
-      refreshToken,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-      },
+  try {
+    if (refreshToken) {
+      await api.post("/auth/logout", { refreshToken })
     }
-  )
-
-  return response
   } finally {
     clearAuthStorage()
   }
