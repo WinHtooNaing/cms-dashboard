@@ -37,14 +37,8 @@ export function LoginForm() {
     try {
       const response = await loginUser(data)
 
-      const { user, accessToken, refreshToken } = response
-      if (user.role !== "ADMIN") {
-        toast.error("You don't have permission to access the admin dashboard.")
-        return
-      }
+      const { refreshToken } = response
 
-      localStorage.setItem("accessToken", accessToken)
-      localStorage.setItem("user", JSON.stringify(user))
       if (refreshToken) {
         localStorage.setItem("refreshToken", refreshToken)
       }
