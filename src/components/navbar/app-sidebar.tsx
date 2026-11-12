@@ -1,8 +1,5 @@
 import * as React from "react"
 
-import { NavProjects } from "@/components/navbar/nav-projects"
-import { NavUser } from "@/components/navbar/nav-user"
-
 import {
   Sidebar,
   SidebarContent,
@@ -12,104 +9,109 @@ import {
 } from "@/components/ui/sidebar"
 
 import {
-  Bot,
-  BracesIcon,
-  Footprints,
-  Heading,
+
+  Boxes,
+  Contact,
   House,
   Info,
-  ListOrderedIcon,
-  ScratchBlocks,
-  Settings2,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
   User,
 } from "lucide-react"
 
 import { Logo } from "./logo"
 import { NavMain } from "./nav-main"
-import { getCurrentUser } from "@/lib/auth"
+import { NavUser } from "@/components/navbar/nav-user"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
-const data = {
-  navMain: [
-    {
-      title: "Home",
-      url: "/home",
-      icon: House,
-      isActive: true,
-      items: [
-        { title: "Image Carousel", url: "/home" },
-        { title: "Category", url: "/home/category" },
-        { title: "New Collection", url: "/home/new-collection" },
-      ],
-    },
-    {
-      title: "Products",
-      url: "/products",
-      icon: Info,
-      items: [{ title: "Products", url: "/products" }],
-    },
-    {
+const navigationGroups = [
+  {
+    title: "E-commerce",
+    items: [
+      {
+        title: "Products",
+        url: "/products",
+        icon: Package,
+        items: [{ title: "Products", url: "/products" }],
+      },
+      {
+        title: "Orders",
+        url: "/order",
+        icon: ShoppingCart,
+        items: [{ title: "Orders", url: "/order" }],
+      },
+       {
       title: "Brand",
       url: "/brand",
       icon: BracesIcon,
       items: [{ title: "Brand", url: "/brand" }],
     },
-    {
-      title: "About",
-      url: "/about",
-      icon: Bot,
-      items: [
-        { title: "Description", url: "/about/description" },
-        { title: "Who We Are", url: "/about/whoweare" },
-        { title: "Our Purposes", url: "/about/ourpurposes" },
-        { title: "Core Values", url: "/about/corevalues" },
-        { title: "Why Choose Us", url: "/about/whychooseus" },
-      ],
-    },
-    {
-      title: "Contact",
-      url: "/contact",
-      icon: Settings2,
-      items: [{ title: "Contact Description", url: "/contact/description" }],
-    },
-    {
-      title: "Order",
-      url: "/order",
-      icon: ListOrderedIcon,
-      items: [{ title: "Order", url: "/order" }],
-    },
-    {
-      title: "Stock",
-      url: "/stock",
-      icon: ScratchBlocks,
-      items: [{ title: "Stock", url: "/stock" }],
-    },
-    {
-      title: "User Management",
-      url: "/users",
-      icon: User,
-      items: [
-        { title: "Users", url: "/users" },
-        { title: "Roles", url: "/roles" },
-      ],
-    },
-  ],
-
-  global: [
-    {
-      name: "Headers",
-      url: "/header",
-      icon: <Heading />,
-    },
-    {
-      name: "Footers",
-      url: "/footer",
-      icon: <Footprints />,
-    },
-  ],
-}
+      {
+        title: "Inventory",
+        url: "/stock",
+        icon: Boxes,
+        items: [{ title: "Stock", url: "/stock" }],
+      },
+      {
+        title: "User Management",
+        url: "/users",
+        icon: User,
+        items: [
+          { title: "Users", url: "/users" },
+          { title: "Roles", url: "/roles" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Content Management",
+    items: [
+      {
+        title: "Home Page",
+        url: "/home",
+        icon: House,
+        items: [
+          { title: "Image Carousel", url: "/home" },
+          { title: "Category", url: "/home/category" },
+          { title: "New Collection", url: "/home/new-collection" },
+        ],
+      },
+      {
+        title: "About Us",
+        url: "/about",
+        icon: Info,
+        items: [
+          { title: "Description", url: "/about/description" },
+          { title: "Who We Are", url: "/about/whoweare" },
+          { title: "Our Purposes", url: "/about/ourpurposes" },
+          { title: "Core Values", url: "/about/corevalues" },
+          { title: "Why Choose Us", url: "/about/whychooseus" },
+        ],
+      },
+      {
+        title: "Contact Us",
+        url: "/contact",
+        icon: Contact,
+        items: [{ title: "Contact Description", url: "/contact/description" }],
+      },
+      {
+        title: "Global Settings",
+        url: "/header",
+        icon: LayoutDashboard,
+        items: [
+          { title: "Header", url: "/header" },
+          { title: "Footer", url: "/footer" },
+        ],
+      },
+    ],
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const user = getCurrentUser()
+  const { data: currentUser } = useCurrentUser()
+
+  const user = currentUser?.user
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -118,8 +120,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent className="overflow-x-hidden">
-        <NavMain items={data.navMain} />
-        <NavProjects global={data.global} />
+        {navigationGroups.map((group) => (
+          <NavMain key={group.title} title={group.title} items={group.items} />
+        ))}
       </SidebarContent>
 
       <SidebarFooter>

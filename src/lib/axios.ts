@@ -1,6 +1,4 @@
-import axios, {
-  type InternalAxiosRequestConfig,
-} from "axios"
+import axios, { type InternalAxiosRequestConfig } from "axios"
 
 import { refreshAccessToken } from "../service/auth.service"
 import { clearAuthStorage } from "@/lib/auth"
@@ -13,7 +11,6 @@ const api = axios.create({
 })
 
 let refreshPromise: Promise<string> | null = null
-
 
 api.interceptors.request.use(
   (config) => {
@@ -33,14 +30,12 @@ api.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined
 
     if (!originalRequest) {
       return Promise.reject(error)
     }
 
-  
     const requestUrl = originalRequest.url ?? ""
 
     if (
@@ -50,12 +45,10 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-
     if (error.response?.status !== 401) {
       return Promise.reject(error)
     }
 
-  
     if (originalRequest._retry) {
       return Promise.reject(error)
     }
@@ -73,15 +66,14 @@ api.interceptors.response.use(
 
     try {
       if (!refreshPromise) {
-        refreshPromise = refreshAccessToken()
+        refreshPromise = refreshAccessToken().finally(() => {
+          refreshPromise = null
+        })
       }
 
       const newAccessToken = await refreshPromise
 
-      refreshPromise = null
-
-      originalRequest.headers.Authorization =
-        `Bearer ${newAccessToken}`
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
 
       return api(originalRequest)
     } catch (refreshError) {

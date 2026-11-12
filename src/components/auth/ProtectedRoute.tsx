@@ -1,8 +1,24 @@
 import { Navigate, Outlet } from "react-router-dom"
-import { isAuthenticated } from "@/lib/auth"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export function ProtectedRoute() {
-  if (!isAuthenticated()) {
+  const hasRefreshToken = Boolean(localStorage.getItem("refreshToken"))
+
+  const { data, isPending, isError } = useCurrentUser()
+
+  if (!hasRefreshToken) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        Loading your account...
+      </div>
+    )
+  }
+
+  if (isError || !data?.user.isActive) {
     return <Navigate to="/login" replace />
   }
 
