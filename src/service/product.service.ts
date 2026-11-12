@@ -100,3 +100,31 @@ export const updateProduct = async (
 
   return response.data.data
 }
+
+export const initializeProductStock = async (
+  productId: string,
+  quantity: number
+) => {
+  const response = await api.post(
+    `/stock/products/${productId}/initialize`,
+    { quantity }
+  )
+  return response.data.data
+}
+
+export type AdjustProductStockPayload = {
+  quantityChange: number
+  reason: string
+  note?: string
+}
+
+export const adjustProductStock = async (
+  productId: string,
+  data: AdjustProductStockPayload
+) => {
+  const response = await api.post(
+    `/stock/products/${productId}/adjustments`,
+    data
+  )
+  return response.data.data
+}

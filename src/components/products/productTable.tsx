@@ -109,7 +109,7 @@ export default function ProductTable() {
               ? "price"
               : "createdAt",
 
-        sortOrder: sorting[0]?.desc ? "desc" : "asc",
+        sortOrder: sorting[0]?.desc ? "asc" : "desc",
       }),
 
     placeholderData: (previousData) => previousData,
