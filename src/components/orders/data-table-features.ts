@@ -1,10 +1,8 @@
 import {
   columnFilteringFeature,
   createFilteredRowModel,
-  createPaginatedRowModel,
   createSortedRowModel,
   filterFn_includesString,
-  rowPaginationFeature,
   rowSortingFeature,
   sortFn_alphanumeric,
   sortFn_text,
@@ -14,12 +12,10 @@ import {
 export const features = tableFeatures({
   // Features
   columnFilteringFeature,
-  rowPaginationFeature,
   rowSortingFeature,
 
   // Row Models
   filteredRowModel: createFilteredRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
   sortedRowModel: createSortedRowModel(),
 
   // Filter Functions
