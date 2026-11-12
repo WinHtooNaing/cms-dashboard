@@ -31,6 +31,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute"
 import Stock from "./pages/stock/Stock"
 import UserManagement from "./pages/user/Users"
 import RolesPage from "./pages/role/Roles"
+import BrandPage from "./pages/brand/Brand"
 
 const router = createBrowserRouter([
   // Guest routes
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
           {
             path: "products",
             element: <Products />,
+          },
+          {
+            path: "brand",
+            element: <BrandPage />,
           },
           {
             path: "products/:id",

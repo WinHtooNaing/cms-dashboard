@@ -13,6 +13,7 @@ import {
 
 import {
   Bot,
+  BracesIcon,
   Footprints,
   Heading,
   House,
@@ -45,6 +46,12 @@ const data = {
       url: "/products",
       icon: Info,
       items: [{ title: "Products", url: "/products" }],
+    },
+    {
+      title: "Brand",
+      url: "/brand",
+      icon: BracesIcon,
+      items: [{ title: "Brand", url: "/brand" }],
     },
     {
       title: "About",
