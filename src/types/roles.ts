@@ -4,14 +4,14 @@ export type Permission = {
   description: string
 }
 
-// Original API permission structure
+
 export type RolePermissionResponse = {
   roleId: string
   permissionId: string
   permission: Permission
 }
 
-// Original API role structure
+
 export type RoleApiResponse = {
   id: string
   name: string
@@ -24,7 +24,6 @@ export type RoleApiResponse = {
   }
 }
 
-// Simplified structure for frontend UI
 export type Role = {
   id: string
   name: string

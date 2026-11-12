@@ -4,7 +4,7 @@ export type AuthUser = {
   email: string
   phone: string | null
   roleId: string
-  role: "ADMIN" | "CUSTOMER"
+  role: string
   isActive: boolean
 }
 

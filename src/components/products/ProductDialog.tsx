@@ -499,6 +499,7 @@ export default function ProductDialog({
                     onChange={(e) => onChange(e.target.files)}
                     className={fieldState.error ? "border-red-500" : ""}
                   />
+
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>
                   )}

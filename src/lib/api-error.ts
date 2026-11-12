@@ -13,6 +13,7 @@ export function getApiErrorMessage(error: unknown): string {
 
     if (!response) {
       return "Unable to connect to the server. Please try again.";
+      
     }
 
     const message = response.data?.message;
