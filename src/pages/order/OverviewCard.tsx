@@ -14,12 +14,12 @@ const OverviewCard = ({
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">{title}</p>
 
-          <h2 className="text-2xl font-semibold">
+          <h2 className="text-xl font-semibold">
             {value.toString().padStart(2, "0")}
           </h2>
         </div>
 
-        <div className="rounded-lg bg-primary/10 p-3 text-primary">{icon}</div>
+        <div className="rounded-lg bg-primary/10 p-1 text-primary">{icon}</div>
       </CardContent>
     </Card>
   )

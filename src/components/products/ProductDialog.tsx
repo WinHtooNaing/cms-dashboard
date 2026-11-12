@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
 import {
   Field,
   FieldDescription,
@@ -13,6 +14,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { useEffect, useState } from "react"
+import { Switch } from "@/components/ui/switch"
 import { generateSlug } from "@/util/generate-slug"
 import { getBrands } from "@/service/brand.service"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -38,13 +41,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { createProduct } from "@/service/product.service"
-export default function CategoryDialog({
+import {
+  createProduct,
+  updateProduct,
+  type UpdateProductPayload,
+} from "@/service/product.service"
+export default function ProductDialog({
   mode,
   product,
+  onClose,
 }: {
   mode: "create" | "update"
   product?: Product
+  onClose: () => void
 }) {
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -55,35 +64,103 @@ export default function CategoryDialog({
     queryKey: ["brands"],
     queryFn: getBrands,
   })
+
   const form = useForm<z.infer<typeof ProductSchema>>({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
-      name: product?.name ?? "",
-      sku: product?.sku ?? "",
-      brandId: product?.brand?.id ?? "",
-      price: Number(product?.price ?? 0),
-      originalPrice: product?.originalPrice
-        ? Number(product.originalPrice)
-        : undefined,
+      name: "",
+      sku: "",
+      brandId: "",
+      price: 0,
+      originalPrice: undefined,
       image: undefined,
-      category: product?.categoryId ?? "",
-      description: product?.description ?? "",
+      category: "",
+      description: "",
     },
   })
+  const [hasDiscount, setHasDiscount] = useState(false)
+  useEffect(() => {
+    if (mode === "update" && product) {
+      const originalPrice =
+        product.originalPrice &&
+        Number(product.originalPrice) > Number(product.price)
+          ? Number(product.originalPrice)
+          : undefined
+
+      setHasDiscount(originalPrice !== undefined)
+
+      form.reset({
+        name: product.name ?? "",
+        sku: product.sku ?? "",
+
+        brandId: product.brand?.id ?? "",
+
+        category: product.category?.id ?? "",
+
+        price: Number(product.price),
+
+        originalPrice,
+
+        description: product.description ?? "",
+
+        image: undefined,
+      })
+    } else {
+      setHasDiscount(false)
+
+      form.reset({
+        name: "",
+        sku: "",
+        brandId: "",
+        category: "",
+        price: 0,
+        originalPrice: undefined,
+        description: "",
+        image: undefined,
+      })
+    }
+  }, [product, mode, form])
+
+  const handleDiscountToggle = (checked: boolean) => {
+    setHasDiscount(checked)
+
+    if (checked) {
+      const currentPrice = form.getValues("price")
+
+      form.setValue("originalPrice", currentPrice, {
+        shouldValidate: true,
+      })
+    } else {
+      form.setValue("originalPrice", undefined, {
+        shouldValidate: true,
+      })
+    }
+  }
+
   function onSubmit(data: z.infer<typeof ProductSchema>) {
     const payload = {
       name: data.name,
-      slug: generateSlug(data.name),
+      slug:
+        mode === "update" && product?.name === data.name
+          ? product.slug
+          : generateSlug(data.name),
       brandId: data.brandId,
       sku: data.sku,
       description: data.description,
       price: data.price,
-      originalPrice: data.originalPrice,
+      originalPrice: hasDiscount ? data.originalPrice : undefined,
       categoryId: data.category,
       image: data.image?.[0] as File | undefined,
     }
 
-    createMutation.mutate(payload)
+    if (mode === "update" && product) {
+      updateMutation.mutate({
+        id: product.id,
+        data: payload,
+      })
+    } else {
+      createMutation.mutate(payload)
+    }
   }
   const queryClient = useQueryClient()
 
@@ -98,12 +175,44 @@ export default function CategoryDialog({
       })
 
       form.reset()
+      onClose()
     },
 
     onError: (error) => {
       toast.error(getApiErrorMessage(error))
     },
   })
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateProductPayload }) =>
+      updateProduct(id, data),
+
+    onSuccess: (_, variables) => {
+      toast.success("Product updated successfully!")
+
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: ["product", variables.id],
+      })
+
+      form.reset()
+      onClose()
+    },
+
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error))
+    },
+  })
+  const isSubmitting = createMutation.isPending || updateMutation.isPending
+  const price = form.watch("price")
+  const originalPrice = form.watch("originalPrice")
+
+  const discountPercentage =
+    hasDiscount && originalPrice !== undefined && originalPrice > price
+      ? Number((((originalPrice - price) / originalPrice) * 100).toFixed(2))
+      : 0
   return (
     <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
       <DialogHeader>
@@ -111,7 +220,9 @@ export default function CategoryDialog({
           {mode === "create" ? "Create product" : "Update product"}
         </DialogTitle>
         <DialogDescription>
-          Product data contains only name, and image
+          {mode === "create"
+            ? "Enter the details to create a new product."
+            : "Update the details of this product."}
         </DialogDescription>
       </DialogHeader>
       <form
@@ -247,7 +358,15 @@ export default function CategoryDialog({
               )}
             />
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-4 rounded-lg border p-4">
+            <div>
+              <h3 className="font-semibold">Product Pricing</h3>
+              <p className="text-sm text-muted-foreground">
+                Set the selling price and optionally add a discount.
+              </p>
+            </div>
+
+            {/* Selling Price */}
             <Controller
               name="price"
               control={form.control}
@@ -256,7 +375,9 @@ export default function CategoryDialog({
                   <FieldLabel>Selling Price (Ks)</FieldLabel>
 
                   <Input
-                    {...field}
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 400000"
                     value={field.value ?? ""}
                     onChange={(event) =>
                       field.onChange(
@@ -265,9 +386,6 @@ export default function CategoryDialog({
                           : event.target.valueAsNumber
                       )
                     }
-                    type="number"
-                    min="0"
-                    placeholder="e.g. 250000"
                     className={fieldState.error ? "border-red-500" : ""}
                   />
 
@@ -278,43 +396,77 @@ export default function CategoryDialog({
               )}
             />
 
-            <Controller
-              name="originalPrice"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field>
-                  <FieldLabel>
-                    Original Price (Ks)
-                    <span className="ml-1 text-xs font-normal text-muted-foreground">
-                      Optional
+            {/* Discount Switch */}
+            <div className="flex items-center justify-between rounded-md bg-muted/50 p-3">
+              <div className="space-y-1">
+                <FieldLabel>Offer a discount</FieldLabel>
+                <p className="text-xs text-muted-foreground">
+                  Enable this if the product has a discounted price.
+                </p>
+              </div>
+
+              <Switch
+                checked={hasDiscount}
+                onCheckedChange={handleDiscountToggle}
+              />
+            </div>
+
+            {/* Original Price */}
+            {hasDiscount && (
+              <Controller
+                name="originalPrice"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Original Price (Ks)</FieldLabel>
+
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 500000"
+                      value={field.value ?? ""}
+                      onChange={(event) =>
+                        field.onChange(
+                          event.target.value === ""
+                            ? undefined
+                            : event.target.valueAsNumber
+                        )
+                      }
+                      className={fieldState.error ? "border-red-500" : ""}
+                    />
+
+                    <FieldDescription>
+                      Must be greater than the selling price.
+                    </FieldDescription>
+
+                    {fieldState.error && (
+                      <FieldError>{fieldState.error.message}</FieldError>
+                    )}
+                  </Field>
+                )}
+              />
+            )}
+
+            {/* Discount Preview */}
+            {hasDiscount && (
+              <div className="rounded-md border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950/30">
+                {discountPercentage > 0 ? (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-green-700 dark:text-green-400">
+                      Discount Preview
                     </span>
-                  </FieldLabel>
 
-                  <Input
-                    value={field.value ?? ""}
-                    onChange={(event) =>
-                      field.onChange(
-                        event.target.value === ""
-                          ? undefined
-                          : event.target.valueAsNumber
-                      )
-                    }
-                    type="number"
-                    min="0"
-                    placeholder="e.g. 300000"
-                    className={fieldState.error ? "border-red-500" : ""}
-                  />
-
-                  <FieldDescription>
-                    Enter this only when the product has a genuine discount.
-                  </FieldDescription>
-
-                  {fieldState.error && (
-                    <FieldError>{fieldState.error.message}</FieldError>
-                  )}
-                </Field>
-              )}
-            />
+                    <span className="font-bold text-green-700 dark:text-green-400">
+                      {discountPercentage}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-destructive">
+                    Original price must be greater than selling price.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <Controller
             name="image"
@@ -347,12 +499,13 @@ export default function CategoryDialog({
                     onChange={(e) => onChange(e.target.files)}
                     className={fieldState.error ? "border-red-500" : ""}
                   />
+
                   {fieldState.error && (
                     <FieldError>{fieldState.error.message}</FieldError>
                   )}
                 </div>
                 <FieldDescription>
-                  Upload a category image (JPG, PNG, or JPEG).
+                  Upload a Product image (JPG, PNG, or JPEG).
                 </FieldDescription>
               </Field>
             )}
@@ -380,9 +533,11 @@ export default function CategoryDialog({
           <DialogClose render={<Button variant="outline" />}>
             Cancel
           </DialogClose>
-          <Button type="submit" disabled={createMutation.isPending}>
-            {createMutation.isPending
-              ? "Creating..."
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? mode === "create"
+                ? "Creating..."
+                : "Updating..."
               : mode === "create"
                 ? "Create Product"
                 : "Update Product"}

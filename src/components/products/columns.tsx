@@ -1,6 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table"
 import type { Product } from "@/types/product"
-import { Eye, MoreHorizontal, SquarePen, Star } from "lucide-react"
+import { Eye, EyeOffIcon, MoreHorizontal, SquarePen } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
@@ -16,12 +16,10 @@ import { Dialog } from "@/components/ui/dialog"
 
 import ProductDialog from "./ProductDialog"
 
-import { getProductRating } from "@/util/product-meta"
-
 import { features } from "./product-table-features"
+import DeleteDialog from "../deleteDialog/DeleteDialog"
 function ProductActions({ product }: { product: Product }) {
   const [isEditOpen, setIsEditOpen] = useState(false)
-
   return (
     <>
       <DropdownMenu>
@@ -31,7 +29,6 @@ function ProductActions({ product }: { product: Product }) {
 
         <DropdownMenuContent align="end" className="w-36">
           <DropdownMenuGroup>
-            {/* View */}
             <DropdownMenuItem
               render={
                 <Link to={`/products/${product.id}`}>
@@ -41,17 +38,24 @@ function ProductActions({ product }: { product: Product }) {
               }
             />
 
-            {/* Edit */}
             <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
               <SquarePen className="mr-2 size-4" />
               Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => DeleteDialog}>
+              <EyeOffIcon className="mr-2 size-4" />
+              InActive
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <ProductDialog mode="update" product={product} />
+        <ProductDialog
+          mode="update"
+          product={product}
+          onClose={() => setIsEditOpen(false)}
+        />
       </Dialog>
     </>
   )
@@ -124,22 +128,6 @@ export const columns = columnHelper.columns([
           }
         >
           {quantity}
-        </div>
-      )
-    },
-  }),
-
-  // Rating - Static for now
-  columnHelper.display({
-    id: "rating",
-    header: "Rating",
-    cell: ({ row }) => {
-      const rating = getProductRating(row.original.id)
-
-      return (
-        <div className="flex items-center gap-1">
-          <Star className="size-4 fill-yellow-400 text-yellow-400" />
-          <span>{rating}</span>
         </div>
       )
     },

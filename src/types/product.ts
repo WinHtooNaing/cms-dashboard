@@ -19,6 +19,7 @@ export interface ProductStock {
 export interface Product {
   id: string
   categoryId?: string
+  brandId: string
   name: string
   slug: string
   sku: string
@@ -35,7 +36,12 @@ export interface Product {
   createdAt: string
   updatedAt: string
 
- brand: Brand | null
+  brand?: {
+    id: string
+    name: string
+    slug: string
+    imageUrl: string | null
+  }
 
   category?: {
     id: string
