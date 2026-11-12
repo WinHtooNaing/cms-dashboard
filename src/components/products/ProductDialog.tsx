@@ -14,7 +14,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { generateSlug } from "@/util/generate-slug"
-import { getBrands } from "@/service/brand.service"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getCategories } from "@/service/category.service"
 
@@ -39,6 +38,7 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { createProduct } from "@/service/product.service"
+import { getBrandsByProduct } from "@/service/brand.service"
 export default function CategoryDialog({
   mode,
   product,
@@ -53,7 +53,7 @@ export default function CategoryDialog({
 
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
-    queryFn: getBrands,
+    queryFn: getBrandsByProduct,
   })
   const form = useForm<z.infer<typeof ProductSchema>>({
     resolver: zodResolver(ProductSchema),
