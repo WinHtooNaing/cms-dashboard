@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getOrders } from "@/service/order.service"
+import type { OrderStatus } from "@/types/order"
 
 import { columns, type OrderTableRow } from "./column"
 import { features } from "./data-table-features"
@@ -92,7 +93,7 @@ const parseOrderPage = (response: unknown, requestedPage: number) => {
       typeof item.orderNumber === "string" ? item.orderNumber : id
     const shippingName =
       typeof item.shippingName === "string" ? item.shippingName : undefined
-    const status = typeof item.status === "string" ? item.status : undefined
+    const status = (typeof item.status === "string" ? item.status : undefined) as OrderStatus | undefined
     const totalAmount = toFiniteNumber(item.totalAmount)
     const createdAt =
       typeof item.createdAt === "string"

@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { OrderTableFeatures } from "./data-table-features"
 import OrderActions from "./OrderAction"
+import type { OrderStatus } from "@/types/order"
 
 export type OrderTableRow = {
   id: string
   orderNumber: string
   shippingName: string
   totalAmount: number
-  status: string
+  status: OrderStatus
   createdAt: string
   itemCount: number
 }
@@ -19,6 +20,25 @@ export type OrderTableRow = {
 const columnHelper = createColumnHelper<OrderTableFeatures, OrderTableRow>()
 
 const formatPrice = (price: number) => `${price.toLocaleString("en-US")}`
+
+const getStatusColor = (status: OrderStatus) => {
+  switch (status) {
+    case "PENDING":
+      return "bg-yellow-500 text-white"
+    case "CONFIRMED":
+      return "bg-blue-500 text-white"
+    case "PROCESSING":
+      return "bg-purple-500 text-white"
+    case "SHIPPED":
+      return "bg-indigo-500 text-white"
+    case "DELIVERED":
+      return "bg-green-500 text-white"
+    case "CANCELLED":
+      return "bg-red-500 text-white"
+    default:
+      return "bg-gray-500 text-white"
+  }
+}
 
 export const columns = columnHelper.columns([
   columnHelper.accessor("orderNumber", {
@@ -79,10 +99,7 @@ export const columns = columnHelper.columns([
   columnHelper.accessor("status", {
     header: "Status",
     cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className={`${row.original.status === "PENDING" ? "bg-yellow-500 text-white" : "bg-green-500 text-white"}`}
-      >
+      <Badge variant="outline" className={getStatusColor(row.original.status)}>
         {row.original.status}
       </Badge>
     ),

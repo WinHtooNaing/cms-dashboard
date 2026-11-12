@@ -1,4 +1,4 @@
-import { Eye, MoreHorizontal, SquarePen, Trash2 } from "lucide-react"
+import { Eye, MoreHorizontal, SquarePen, Trash2, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -21,12 +21,69 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Label } from "../ui/label"
 import { Input } from "../ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { updateOrderStatus } from "@/service/order.service"
+import type { OrderStatus } from "@/types/order"
+import { toast } from "sonner"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+
+const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED"],
+  CONFIRMED: ["PROCESSING"],
+  PROCESSING: ["SHIPPED"],
+  SHIPPED: ["DELIVERED"],
+  DELIVERED: [],
+  CANCELLED: [],
+}
+
 type OrderActionsProps = {
   id: string
-  status: string
+  status: OrderStatus
 }
+
 export default function OrderActions({ status, id }: OrderActionsProps) {
   const [updateOpen, setUpdateOpen] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<OrderStatus | "">("")
+  const queryClient = useQueryClient()
+
+  const allowedNextStatuses = ALLOWED_TRANSITIONS[status] || []
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (newStatus: OrderStatus) => updateOrderStatus(id, newStatus),
+    onSuccess: () => {
+      toast.success("Order status updated successfully")
+      setUpdateOpen(false)
+      queryClient.invalidateQueries({ queryKey: ["orders"] })
+    },
+    onError: () => {
+      toast.error("Failed to update order status")
+    },
+  })
+
+  const cancelMutation = useMutation({
+    mutationFn: () => updateOrderStatus(id, "CANCELLED"),
+    onSuccess: () => {
+      toast.success("Order cancelled successfully")
+      queryClient.invalidateQueries({ queryKey: ["orders"] })
+    },
+    onError: () => {
+      toast.error("Failed to cancel order")
+    },
+  })
+
+  const handleStatusChange = (value: OrderStatus | "" | null) => {
+    if (value === null) return
+    setSelectedStatus(value)
+  }
+
+  const handleUpdate = () => {
+    if (!selectedStatus) return
+    updateStatusMutation.mutate(selectedStatus)
+  }
+
+  const handleCancel = () => {
+    cancelMutation.mutate()
+  }
 
   return (
     <>
@@ -48,17 +105,19 @@ export default function OrderActions({ status, id }: OrderActionsProps) {
             </DropdownMenuItem>
           </Link>
 
-          <DropdownMenuItem onClick={() => setUpdateOpen(true)}>
-            <SquarePen className="mr-2 size-4" />
-            Update Status
-          </DropdownMenuItem>
+          {allowedNextStatuses.length > 0 && (
+            <DropdownMenuItem onClick={() => setUpdateOpen(true)}>
+              <SquarePen className="mr-2 size-4" />
+              Update Status
+            </DropdownMenuItem>
+          )}
 
-          {status == "PENDING" && (
+          {status === "PENDING" && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive">
+              <DropdownMenuItem variant="destructive" onClick={handleCancel} disabled={cancelMutation.isPending}>
                 <Trash2 className="mr-2 size-4" />
-                Cancel Order
+                {cancelMutation.isPending ? "Cancelling..." : "Cancel Order"}
               </DropdownMenuItem>
             </>
           )}
@@ -69,25 +128,40 @@ export default function OrderActions({ status, id }: OrderActionsProps) {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Update Order Status</DialogTitle>
-            <DialogDescription></DialogDescription>
+            <DialogDescription>
+              Current status: {status}
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-4">
-            <Input
-              type="text"
-              value={status}
-              readOnly
-              className="border-2 border-yellow-500"
-            />
-            <Label>to</Label>
-            <Input
-              type="text"
-              value={status}
-              readOnly
-              className="border-2 border-green-500"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Input
+                type="text"
+                value={status}
+                readOnly
+                className="border-2 border-yellow-500"
+              />
+              <Label>→</Label>
+              <Select
+                value={selectedStatus}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select next status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allowedNextStatuses.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleUpdate} disabled={updateStatusMutation.isPending || !selectedStatus}>
+              {updateStatusMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Update"}
+            </Button>
           </div>
-          <Button>Update</Button>
         </DialogContent>
       </Dialog>
     </>
