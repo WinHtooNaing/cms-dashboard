@@ -1,131 +1,114 @@
 import { createColumnHelper } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
-import OrderActions from "./OrderAction"
-import { Button } from "@/components/ui/button"
+
 import { Badge } from "@/components/ui/badge"
-
-import type { Order, OrderStatus } from "@/data/orders"
+import { Button } from "@/components/ui/button"
 import type { OrderTableFeatures } from "./data-table-features"
+import OrderActions from "./OrderAction"
+import type { OrderStatus } from "@/types/order"
 
-type OrderTableData = Order & {
+export type OrderTableRow = {
+  id: string
+  orderNumber: string
+  shippingName: string
   totalAmount: number
-  totalItems: number
+  status: OrderStatus
+  createdAt: string
+  itemCount: number
 }
 
-type ColumnsProps = {
-  onUpdateStatus: (order: Order, status: OrderStatus) => void | Promise<void>
+const columnHelper = createColumnHelper<OrderTableFeatures, OrderTableRow>()
 
-  onCancel: (order: Order) => void | Promise<void>
-}
+const formatPrice = (price: number) => `${price.toLocaleString("en-US")}`
 
-const columnHelper = createColumnHelper<OrderTableFeatures, OrderTableData>()
-export const getStatusStyle = (status: OrderStatus) => {
-  const styles: Record<OrderStatus, string> = {
-    Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    Processing: "bg-blue-100 text-blue-700 border-blue-200",
-    Shipped: "bg-purple-100 text-purple-700 border-purple-200",
-    Delivered: "bg-green-100 text-green-700 border-green-200",
-    Cancelled: "bg-red-100 text-red-700 border-red-200",
+const getStatusColor = (status: OrderStatus) => {
+  switch (status) {
+    case "PENDING":
+      return "bg-yellow-500 text-white"
+    case "CONFIRMED":
+      return "bg-blue-500 text-white"
+    case "PROCESSING":
+      return "bg-purple-500 text-white"
+    case "SHIPPED":
+      return "bg-indigo-500 text-white"
+    case "DELIVERED":
+      return "bg-green-500 text-white"
+    case "CANCELLED":
+      return "bg-red-500 text-white"
+    default:
+      return "bg-gray-500 text-white"
   }
-
-  return styles[status]
 }
 
-export const formatPrice = (price: number) =>
-  `${price.toLocaleString("en-US")} MMK`
-
-export const columns = ({ onUpdateStatus, onCancel }: ColumnsProps) =>
-  columnHelper.columns([
-    // Order ID
-    columnHelper.accessor("id", {
-      header: "Order ID",
-      cell: ({ row }) => <span className="font-medium">{row.original.id}</span>,
-    }),
-
-    // Customer
-    // The accessor includes ID, name, and email for searching.
-    columnHelper.accessor(
-      (row) => `${row.id} ${row.customer.name} ${row.customer.email}`,
-      {
-        id: "customer",
-        header: "Customer",
-        filterFn: "includesString",
-        cell: ({ row }) => (
-          <div className="space-y-1">
-            <p className="font-medium">{row.original.customer.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {row.original.customer.email}
-            </p>
-          </div>
-        ),
-      }
+export const columns = columnHelper.columns([
+  columnHelper.accessor("orderNumber", {
+    header: "Order ID",
+    cell: ({ row }) => (
+      <span className="font-medium">
+        {row.original.orderNumber.slice(0, 7)}
+      </span>
     ),
-
-    // Products
-    columnHelper.accessor("totalItems", {
-      header: "Products",
-      cell: ({ row }) => <span>{row.original.totalItems} items</span>,
-    }),
-
-    // Order Date
-    columnHelper.accessor("orderDate", {
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Order Date
-          <ArrowUpDown className="ml-2 size-4" />
-        </Button>
-      ),
+  }),
+  columnHelper.accessor(
+    (row) => `${row.id} ${row.orderNumber} ${row.shippingName}`,
+    {
+      id: "customer",
+      header: "Customer",
+      filterFn: "includesString",
       cell: ({ row }) => (
-        <span>{new Date(row.original.orderDate).toLocaleDateString()}</span>
+        <div className="space-y-1">
+          <p className="font-medium">{row.original.shippingName}</p>
+        </div>
       ),
-    }),
-
-    // Total Amount
-    columnHelper.accessor("totalAmount", {
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Total Amount
-          <ArrowUpDown className="ml-2 size-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <span className="font-semibold">
-          {formatPrice(row.original.totalAmount)}
-        </span>
-      ),
-    }),
-
-    // Status
-    columnHelper.accessor("status", {
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={getStatusStyle(row.original.status)}
-        >
-          {row.original.status}
-        </Badge>
-      ),
-    }),
-
-    // Actions
-    columnHelper.display({
-      id: "actions",
-      header: "Actions",
-      enableSorting: false,
-
-      cell: ({ row }) => (
-        <OrderActions
-          order={row.original}
-          onUpdateStatus={onUpdateStatus}
-          onCancel={onCancel}
-        />
-      ),
-    }),
-  ])
+    }
+  ),
+  columnHelper.accessor("itemCount", {
+    header: "Products",
+    cell: ({ row }) => <span>{row.original.itemCount} items</span>,
+  }),
+  columnHelper.accessor("createdAt", {
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Order Date
+        <ArrowUpDown className="ml-2 size-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>
+    ),
+  }),
+  columnHelper.accessor("totalAmount", {
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Total Amount
+        <ArrowUpDown className="ml-2 size-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <span className="font-semibold">
+        {formatPrice(row.original.totalAmount)}
+      </span>
+    ),
+  }),
+  columnHelper.accessor("status", {
+    header: "Status",
+    cell: ({ row }) => (
+      <Badge variant="outline" className={getStatusColor(row.original.status)}>
+        {row.original.status}
+      </Badge>
+    ),
+  }),
+  columnHelper.display({
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      return <OrderActions status={row.original.status} id={row.original.id} />
+    },
+  }),
+])

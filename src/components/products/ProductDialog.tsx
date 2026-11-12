@@ -17,7 +17,6 @@ import {
 import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { generateSlug } from "@/util/generate-slug"
-import { getBrands } from "@/service/brand.service"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getCategories } from "@/service/category.service"
 
@@ -41,12 +40,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import {
-  createProduct,
-  updateProduct,
-  type UpdateProductPayload,
-} from "@/service/product.service"
-export default function ProductDialog({
+import { createProduct } from "@/service/product.service"
+import { getBrandsByProduct } from "@/service/brand.service"
+export default function CategoryDialog({
   mode,
   product,
   onClose,
@@ -62,7 +58,7 @@ export default function ProductDialog({
 
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
-    queryFn: getBrands,
+    queryFn: getBrandsByProduct,
   })
 
   const form = useForm<z.infer<typeof ProductSchema>>({

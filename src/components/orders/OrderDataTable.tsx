@@ -1,11 +1,20 @@
-import { useState } from "react"
-
+import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import {
   useTable,
-  type SortingState,
   type ColumnFiltersState,
+  type SortingState,
 } from "@tanstack/react-table"
 
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -14,43 +23,146 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { getOrders } from "@/service/order.service"
+import type { OrderStatus } from "@/types/order"
 
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-
-import type { Order } from "@/data/orders"
-
+import { columns, type OrderTableRow } from "./column"
 import { features } from "./data-table-features"
-import { columns } from "./column"
 
-type OrderTableData = Order & {
-  totalAmount: number
-  totalItems: number
+const PAGE_SIZE = 10
+const EMPTY_ORDERS: OrderTableRow[] = []
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null
+
+const toFiniteNumber = (value: unknown): number | undefined => {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? Number(value)
+        : Number.NaN
+
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
-type OrderDataTableProps = {
-  data: OrderTableData[]
-  onView: (order: Order) => void
+const toPositiveInteger = (value: unknown): number | undefined => {
+  const parsed = toFiniteNumber(value)
+  return parsed !== undefined && Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : undefined
 }
 
-const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
+const getItemCount = (items: unknown[]) =>
+  items.reduce<number>((total, item) => {
+    if (isRecord(item)) {
+      const quantity = toPositiveInteger(item.quantity)
+      if (quantity !== undefined) return total + quantity
+    }
+
+    return total + 1
+  }, 0)
+
+const parseOrderPage = (response: unknown, requestedPage: number) => {
+  if (!isRecord(response)) {
+    throw new Error("The orders API returned an invalid response.")
+  }
+
+  let payload = isRecord(response.data) ? response.data : response
+  if (!Array.isArray(payload.items) && isRecord(payload.data)) {
+    payload = payload.data
+  }
+
+  const rawItems = Array.isArray(payload.items)
+    ? payload.items
+    : Array.isArray(response.items)
+      ? response.items
+      : undefined
+
+  if (!rawItems) {
+    throw new Error("The orders API response did not include an orders list.")
+  }
+
+  const items = rawItems.map((item, index): OrderTableRow => {
+    if (!isRecord(item)) {
+      throw new Error(`The orders API returned an invalid order at row ${index + 1}.`)
+    }
+
+    const id = typeof item.id === "string" ? item.id : undefined
+    const orderNumber =
+      typeof item.orderNumber === "string" ? item.orderNumber : id
+    const shippingName =
+      typeof item.shippingName === "string" ? item.shippingName : undefined
+    const status = (typeof item.status === "string" ? item.status : undefined) as OrderStatus | undefined
+    const totalAmount = toFiniteNumber(item.totalAmount)
+    const createdAt =
+      typeof item.createdAt === "string"
+        ? item.createdAt
+        : item.createdAt instanceof Date
+          ? item.createdAt.toISOString()
+          : undefined
+
+    if (
+      !id ||
+      !orderNumber ||
+      shippingName === undefined ||
+      status === undefined ||
+      totalAmount === undefined ||
+      createdAt === undefined
+    ) {
+      throw new Error(
+        `The orders API returned incomplete data at row ${index + 1}.`
+      )
+    }
+
+    return {
+      id,
+      orderNumber,
+      shippingName,
+      status,
+      totalAmount,
+      createdAt,
+      itemCount: Array.isArray(item.items) ? getItemCount(item.items) : 0,
+    }
+  })
+
+  const pagination = isRecord(payload.pagination)
+    ? payload.pagination
+    : isRecord(response.pagination)
+      ? response.pagination
+      : undefined
+
+  return {
+    items,
+    page: (pagination && toPositiveInteger(pagination.page)) ?? requestedPage,
+    total: pagination ? toFiniteNumber(pagination.total) : undefined,
+    totalPages: pagination
+      ? toPositiveInteger(pagination.totalPages)
+      : undefined,
+  }
+}
+
+const OrderDataTable = () => {
+  const [page, setPage] = useState(1)
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
-  const tableColumns = columns({ onView })
+  const { data, isPending, isFetching, isError, error } = useQuery({
+    queryKey: ["orders", page, PAGE_SIZE],
+    queryFn: async () => parseOrderPage(await getOrders(page, PAGE_SIZE), page),
+    placeholderData: (previousData) => previousData,
+  })
+
+  const rows = data?.items ?? EMPTY_ORDERS
+  const statuses = useMemo(
+    () => [...new Set(rows.map((order) => order.status))].sort(),
+    [rows]
+  )
 
   const table = useTable({
     features,
-    data,
-    columns: tableColumns,
+    data: rows,
+    columns,
     state: {
       sorting,
       columnFilters,
@@ -59,11 +171,17 @@ const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
     onColumnFiltersChange: setColumnFilters,
   })
 
+  const currentPage = data?.page ?? page
+  const canGoNext =
+    data?.totalPages !== undefined
+      ? currentPage < data.totalPages
+      : rows.length === PAGE_SIZE
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="Search order ID, customer name or email..."
+          placeholder="Search order ID or customer..."
           value={
             (table.getColumn("customer")?.getFilterValue() as string) ?? ""
           }
@@ -86,14 +204,13 @@ const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
           <SelectTrigger className="sm:w-45">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
-
           <SelectContent>
             <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="Processing">Processing</SelectItem>
-            <SelectItem value="Shipped">Shipped</SelectItem>
-            <SelectItem value="Delivered">Delivered</SelectItem>
-            <SelectItem value="Cancelled">Cancelled</SelectItem>
+            {statuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -113,9 +230,23 @@ const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
               </TableRow>
             ))}
           </TableHeader>
-
           <TableBody>
-            {table.getRowModel().rows.length ? (
+            {isPending ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Loading orders...
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-destructive"
+                >
+                  {error instanceof Error ? error.message : "Failed to load orders."}
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getAllCells().map((cell) => (
@@ -127,10 +258,7 @@ const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={tableColumns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   No orders found.
                 </TableCell>
               </TableRow>
@@ -141,25 +269,29 @@ const OrderDataTable = ({ data, onView }: OrderDataTableProps) => {
 
       <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
         <p className="text-sm text-muted-foreground">
-          Showing {table.getRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} orders
+          Showing {table.getFilteredRowModel().rows.length} of{" "}
+          {data?.total ?? rows.length} orders
+          {isFetching && <span className="ml-2">Updating...</span>}
         </p>
 
         <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage}
+            {data?.totalPages !== undefined ? ` of ${data.totalPages}` : ""}
+          </span>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPage(currentPage - 1)}
+            disabled={currentPage <= 1 || isFetching}
           >
             Previous
           </Button>
-
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPage(currentPage + 1)}
+            disabled={!canGoNext || isFetching}
           >
             Next
           </Button>
