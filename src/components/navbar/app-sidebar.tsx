@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import {
-
-  Boxes,
+  BracesIcon,
   Contact,
   House,
   Info,
@@ -41,17 +40,11 @@ const navigationGroups = [
         icon: ShoppingCart,
         items: [{ title: "Orders", url: "/order" }],
       },
-       {
-      title: "Brand",
-      url: "/brand",
-      icon: BracesIcon,
-      items: [{ title: "Brand", url: "/brand" }],
-    },
       {
-        title: "Inventory",
-        url: "/stock",
-        icon: Boxes,
-        items: [{ title: "Stock", url: "/stock" }],
+        title: "Brand",
+        url: "/brand",
+        icon: BracesIcon,
+        items: [{ title: "Brand", url: "/brand" }],
       },
       {
         title: "User Management",

@@ -4,7 +4,7 @@ import { refreshAccessToken } from "../service/auth.service"
 import { clearAuthStorage } from "@/lib/auth"
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     Accept: "application/json",
   },

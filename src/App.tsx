@@ -28,7 +28,6 @@ import Order from "./pages/order/Orders"
 
 import { GuestRoute } from "./components/auth/GuestRoute"
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"
-import Stock from "./pages/stock/Stock"
 import UserManagement from "./pages/user/Users"
 import RolesPage from "./pages/role/Roles"
 import BrandPage from "./pages/brand/Brand"
@@ -108,10 +107,6 @@ const router = createBrowserRouter([
           {
             path: "order",
             element: <Order />,
-          },
-          {
-            path: "stock",
-            element: <Stock />,
           },
           {
             path: "users",
