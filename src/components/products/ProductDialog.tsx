@@ -40,7 +40,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { createProduct } from "@/service/product.service"
+import {
+  createProduct,
+  updateProduct,
+  type UpdateProductPayload,
+} from "@/service/product.service"
 import { getBrandsByProduct } from "@/service/brand.service"
 export default function CategoryDialog({
   mode,

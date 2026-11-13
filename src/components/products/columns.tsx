@@ -1,6 +1,13 @@
 import { createColumnHelper } from "@tanstack/react-table"
 import type { Product } from "@/types/product"
-import { Eye, EyeOffIcon, MoreHorizontal, SquarePen } from "lucide-react"
+import {
+  Eye,
+  EyeOffIcon,
+  MoreHorizontal,
+  PackagePlus,
+  SlidersHorizontal,
+  SquarePen,
+} from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
@@ -10,16 +17,23 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Dialog } from "@/components/ui/dialog"
 
 import ProductDialog from "./ProductDialog"
+import StockInitializeDialog from "./StockInitializeDialog"
+import StockAdjustmentDialog from "./StockAdjustmentDialog"
 
 import { features } from "./product-table-features"
 import DeleteDialog from "../deleteDialog/DeleteDialog"
 function ProductActions({ product }: { product: Product }) {
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isInitializeOpen, setIsInitializeOpen] = useState(false)
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false)
+  const quantity = product.stock?.availableQuantity ?? 0
+
   return (
     <>
       <DropdownMenu>
@@ -27,7 +41,7 @@ function ProductActions({ product }: { product: Product }) {
           <MoreHorizontal className="size-5" />
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" className="w-36">
+        <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuGroup>
             <DropdownMenuItem
               render={
@@ -42,6 +56,19 @@ function ProductActions({ product }: { product: Product }) {
               <SquarePen className="mr-2 size-4" />
               Edit
             </DropdownMenuItem>
+            {quantity <= 0 && (
+              <DropdownMenuItem onClick={() => setIsInitializeOpen(true)}>
+                <PackagePlus className="mr-2 size-4" />
+                Initialize Stock
+              </DropdownMenuItem>
+            )}
+            {quantity > 0 && (
+              <DropdownMenuItem onClick={() => setIsAdjustOpen(true)}>
+                <SlidersHorizontal className="mr-2 size-4" />
+                Adjust Stock
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => DeleteDialog}>
               <EyeOffIcon className="mr-2 size-4" />
               InActive
@@ -55,6 +82,18 @@ function ProductActions({ product }: { product: Product }) {
           mode="update"
           product={product}
           onClose={() => setIsEditOpen(false)}
+        />
+      </Dialog>
+      <Dialog open={isInitializeOpen} onOpenChange={setIsInitializeOpen}>
+        <StockInitializeDialog
+          product={product}
+          onClose={() => setIsInitializeOpen(false)}
+        />
+      </Dialog>
+      <Dialog open={isAdjustOpen} onOpenChange={setIsAdjustOpen}>
+        <StockAdjustmentDialog
+          product={product}
+          onClose={() => setIsAdjustOpen(false)}
         />
       </Dialog>
     </>
