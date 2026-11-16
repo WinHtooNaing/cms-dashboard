@@ -9,8 +9,6 @@ import {
   Heading,
   Footprints,
   Bot,
-  ListOrdered,
-  ScratchBlocks,
 } from "lucide-react"
 
 export const navigation = [

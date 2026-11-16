@@ -11,12 +11,12 @@ export default function Main() {
     <SidebarProvider>
       <AppSidebar />
 
-      <SidebarInset>
+      <SidebarInset className="min-w-0 flex-1">
         <header className="flex h-16 shrink-0 items-center gap-3 border-b px-4 md:hidden">
           <SidebarTrigger />
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-4 md:p-6">
+        <main className="w-full min-w-0 flex-1 p-4 md:p-6">
           <Outlet />
         </main>
       </SidebarInset>

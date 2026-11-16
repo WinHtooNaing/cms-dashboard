@@ -58,10 +58,12 @@ const ProductView = () => {
   })
 
   // Fetch brands
-  const { data: brands = [] } = useQuery({
+  const { data: brandResponse } = useQuery({
     queryKey: ["brands"],
-    queryFn: getBrands,
+    queryFn: () => getBrands(),
   })
+
+  const brands = brandResponse?.items ?? []
 
   if (isLoading) {
     return <ProductViewSkeleton />

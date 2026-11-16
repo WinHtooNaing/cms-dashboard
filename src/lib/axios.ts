@@ -1,5 +1,4 @@
 import axios, { type InternalAxiosRequestConfig } from "axios"
-
 import { refreshAccessToken } from "../service/auth.service"
 import { clearAuthStorage } from "@/lib/auth"
 

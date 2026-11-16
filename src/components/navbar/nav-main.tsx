@@ -20,15 +20,7 @@ import {
 
 import { NavLink, useLocation } from "react-router-dom"
 
-type NavigationItem = {
-  title: string
-  url: string
-  icon?: LucideIcon
-  items?: {
-    title: string
-    url: string
-  }[]
-}
+import type { NavigationItem } from "@/config/navigation"
 
 type NavMainProps = {
   title: string
