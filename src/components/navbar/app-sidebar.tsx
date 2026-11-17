@@ -25,7 +25,6 @@ function filterNavigationItems(
   hasPermission: (permission: string) => boolean
 ): NavigationItem[] {
   return items.flatMap((item) => {
-    // Filter child navigation items
     const filteredChildren = item.items?.filter((child) =>
       child.permission ? hasPermission(child.permission) : true
     )

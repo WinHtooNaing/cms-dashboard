@@ -1,32 +1,64 @@
 import { Compass } from "lucide-react"
 
-import AboutContentManager, {
-  type AboutContentItem,
-} from "@/components/about/AboutContentManager"
+import AboutContentManager from "@/components/about/AboutContentManager"
 
-const initialMissionVision: AboutContentItem[] = [
-  {
-    id: "mission",
-    title: "Our Mission",
-    description:
-      "Our mission is to make modern technology easier to discover and access by providing a simple shopping experience, clear product information, and customer-focused service.",
-  },
-  {
-    id: "vision",
-    title: "Our Vision",
-    description:
-      "Our vision is to become a trusted technology destination in Myanmar where customers can discover suitable products, make informed choices, and enjoy a convenient digital shopping experience.",
-  },
-]
+import { useMemo } from "react"
+
+import { useAboutSection } from "@/hooks/cms/useAboutSection"
+import { useSectionItems } from "@/hooks/cms/useSectionItems"
+import { useUpdateItem } from "@/hooks/cms/useUpdateItem"
 
 const OurPurposes = () => {
+  const { section, isLoading: sectionLoading } =
+    useAboutSection("mission-vision")
+
+  const { data: cmsItems = [], isLoading: itemsLoading } = useSectionItems(
+    section?.id
+  )
+
+  const updateItemMutation = useUpdateItem()
+
+  const items = useMemo(
+    () =>
+      cmsItems.map((item) => ({
+        id: item.id,
+        position: item.position,
+        title: String(item.content.title ?? ""),
+        description: String(item.content.description ?? ""),
+      })),
+    [cmsItems]
+  )
+
+  const handleUpdate = async (
+    itemId: string,
+    values: {
+      title: string
+      description: string
+    }
+  ) => {
+    if (!section) return
+
+    await updateItemMutation.mutateAsync({
+      itemId,
+      sectionId: section.id,
+      payload: {
+        content: {
+          title: values.title,
+          description: values.description,
+        },
+      },
+    })
+  }
   return (
     <AboutContentManager
       title="Mission & Vision"
-      description="Manage the mission and vision statements that communicate the purpose and future direction of Tech Haven."
+      description="Manage your company's mission and vision."
       icon={Compass}
-      itemLabel="Statement"
-      initialItems={initialMissionVision}
+      itemLabel="Purpose"
+      items={items}
+      isLoading={sectionLoading || itemsLoading}
+      isUpdating={updateItemMutation.isPending}
+      onUpdate={handleUpdate}
     />
   )
 }

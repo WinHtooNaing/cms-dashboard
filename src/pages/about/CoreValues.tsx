@@ -1,44 +1,63 @@
 import { HeartHandshake } from "lucide-react"
 
-import AboutContentManager, {
-  type AboutContentItem,
-} from "@/components/about/AboutContentManager"
+import AboutContentManager from "@/components/about/AboutContentManager"
 
-const initialCoreValues: AboutContentItem[] = [
-  {
-    id: "1",
-    title: "Quality & Trust",
-    description:
-      "We prioritize reliable products and transparent information so customers can shop with confidence.",
-  },
-  {
-    id: "2",
-    title: "Customer First",
-    description:
-      "We put our customers first by making product discovery simple and providing helpful support.",
-  },
-  {
-    id: "3",
-    title: "Innovation",
-    description:
-      "We embrace modern technology and continuously improve our shopping experience.",
-  },
-  {
-    id: "4",
-    title: "Community",
-    description:
-      "We aim to build lasting relationships with our customers and contribute to a connected technology community.",
-  },
-]
+import { useMemo } from "react"
+
+import { useAboutSection } from "@/hooks/cms/useAboutSection"
+import { useSectionItems } from "@/hooks/cms/useSectionItems"
+import { useUpdateItem } from "@/hooks/cms/useUpdateItem"
 
 const CoreValuesPage = () => {
+  const { section, isLoading: sectionLoading } = useAboutSection("core-values")
+
+  const { data: cmsItems = [], isLoading: itemsLoading } = useSectionItems(
+    section?.id
+  )
+
+  const updateItemMutation = useUpdateItem()
+
+  const items = useMemo(
+    () =>
+      cmsItems.map((item) => ({
+        id: item.id,
+        position: item.position,
+        title: String(item.content.title ?? ""),
+        description: String(item.content.description ?? ""),
+      })),
+    [cmsItems]
+  )
+
+  const handleUpdate = async (
+    itemId: string,
+    values: {
+      title: string
+      description: string
+    }
+  ) => {
+    if (!section) return
+
+    await updateItemMutation.mutateAsync({
+      itemId,
+      sectionId: section.id,
+      payload: {
+        content: {
+          title: values.title,
+          description: values.description,
+        },
+      },
+    })
+  }
   return (
     <AboutContentManager
       title="Core Values"
-      description="Manage the principles and values that define the Tech Haven brand."
+      description="Manage the core values of your company."
       icon={HeartHandshake}
       itemLabel="Core Value"
-      initialItems={initialCoreValues}
+      items={items}
+      isLoading={sectionLoading || itemsLoading}
+      isUpdating={updateItemMutation.isPending}
+      onUpdate={handleUpdate}
     />
   )
 }

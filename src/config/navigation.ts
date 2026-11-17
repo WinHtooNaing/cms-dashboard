@@ -32,11 +32,7 @@ export type NavigationGroup = {
 
 export const navigationGroups: NavigationGroup[] = [
 
-
-  // ========================================
   // E-COMMERCE
-  // ========================================
-
   {
     title: "E-commerce",
 
@@ -120,9 +116,9 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
 
-  // ========================================
+ 
   // CONTENT MANAGEMENT
-  // ========================================
+
 {
   title: "Content Management",
 

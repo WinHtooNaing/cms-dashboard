@@ -13,6 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
@@ -31,6 +32,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog"
 
 import FieldError from "../error/FieldError"
@@ -40,8 +42,11 @@ import {
   type AboutContentFormValues,
 } from "@/schemas/aboutSchema"
 
-export type AboutContentItem = AboutContentFormValues & {
+export type AboutContentItem = {
   id: string
+  position: number
+  title: string
+  description: string
 }
 
 type DialogMode = "edit" | "view"
@@ -51,7 +56,13 @@ type AboutContentManagerProps = {
   description: string
   icon: LucideIcon
   itemLabel: string
-  initialItems: AboutContentItem[]
+
+  items: AboutContentItem[]
+
+  isLoading?: boolean
+  isUpdating?: boolean
+
+  onUpdate: (itemId: string, values: AboutContentFormValues) => Promise<void>
 }
 
 const AboutContentManager = ({
@@ -59,7 +70,10 @@ const AboutContentManager = ({
   description,
   icon: Icon,
   itemLabel,
-  initialItems,
+  items,
+  isLoading = false,
+  isUpdating = false,
+  onUpdate,
 }: AboutContentManagerProps) => {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<DialogMode>()
@@ -82,9 +96,7 @@ const AboutContentManager = ({
     mode: "onTouched",
   })
 
-  const filteredItems = initialItems.filter((item) => {
-    return item.title.toLowerCase() || item.description.toLowerCase()
-  })
+  const sortedItems = [...items].sort((a, b) => a.position - b.position)
 
   const openViewDialog = (item: AboutContentItem) => {
     setMode("view")
@@ -113,17 +125,27 @@ const AboutContentManager = ({
   const closeDialog = () => {
     setOpen(false)
     setSelectedItem(null)
-    reset()
+    reset({
+      title: "",
+      description: "",
+    })
   }
 
-  const onSubmit = (_data: AboutContentFormValues) => {
-    setOpen(false)
-    setSelectedItem(null)
-    reset()
+  const onSubmit = async (data: AboutContentFormValues) => {
+    if (!selectedItem) return
+
+    try {
+      await onUpdate(selectedItem.id, data)
+
+      closeDialog()
+    } catch (error) {
+      console.error("Failed to update content:", error)
+    }
   }
 
   return (
     <div className="space-y-8 pt-4 sm:pt-6">
+      {/* Page Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-primary/10 text-primary">
@@ -138,6 +160,7 @@ const AboutContentManager = ({
         </div>
       </div>
 
+      {/* Content Table */}
       <Card className="overflow-hidden">
         <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div>
@@ -164,8 +187,17 @@ const AboutContentManager = ({
             </TableHeader>
 
             <TableBody>
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item, index) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="h-32 text-center text-muted-foreground"
+                  >
+                    Loading content...
+                  </TableCell>
+                </TableRow>
+              ) : sortedItems.length > 0 ? (
+                sortedItems.map((item, index) => (
                   <TableRow key={item.id}>
                     <TableCell className="text-muted-foreground">
                       {index + 1}
@@ -179,12 +211,15 @@ const AboutContentManager = ({
                       <Tooltip>
                         <TooltipTrigger>
                           <p className="line-clamp-2 overflow-hidden text-sm leading-6 text-ellipsis text-muted-foreground md:text-clip">
-                            {item.description.slice(0, 80)}...
+                            {item.description.length > 80
+                              ? `${item.description.slice(0, 80)}...`
+                              : item.description}
                           </p>
                         </TooltipTrigger>
+
                         <TooltipContent>
                           <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
-                            {item.description.slice(0, 1000)}
+                            {item.description}
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -192,6 +227,7 @@ const AboutContentManager = ({
 
                     <TableCell>
                       <div className="flex justify-end gap-1">
+                        {/* View */}
                         <Button
                           type="button"
                           variant="ghost"
@@ -203,6 +239,7 @@ const AboutContentManager = ({
                           <Eye className="h-4 w-4" />
                         </Button>
 
+                        {/* Edit */}
                         <Button
                           type="button"
                           variant="ghost"
@@ -222,6 +259,10 @@ const AboutContentManager = ({
                   <TableCell colSpan={4} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <FileText className="h-7 w-7" />
+
+                      <p className="text-sm">
+                        No {itemLabel.toLowerCase()} found.
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -231,6 +272,7 @@ const AboutContentManager = ({
         </CardContent>
       </Card>
 
+      {/* View / Edit Dialog */}
       <Dialog
         open={open}
         onOpenChange={(isOpen) => {
@@ -243,13 +285,18 @@ const AboutContentManager = ({
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
+            <DialogTitle>
+              {mode === "view" ? `View ${itemLabel}` : `Edit ${itemLabel}`}
+            </DialogTitle>
+
             <DialogDescription>
               {mode === "view"
                 ? "Review the complete content details."
-                : "Complete the fields below. Your entries will be validated."}
+                : "Update the content fields below."}
             </DialogDescription>
           </DialogHeader>
 
+          {/* View Mode */}
           {mode === "view" && selectedItem ? (
             <div className="space-y-5 py-2">
               <div className="space-y-2">
@@ -275,6 +322,7 @@ const AboutContentManager = ({
               </div>
             </div>
           ) : (
+            /* Edit Mode */
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 py-2">
               <div className="space-y-2">
                 <Label htmlFor="content-title">Title</Label>
@@ -282,7 +330,6 @@ const AboutContentManager = ({
                 <Input
                   id="content-title"
                   placeholder="Enter a title"
-                  disabled={mode === "view"}
                   {...register("title")}
                   aria-invalid={!!errors.title}
                 />
@@ -297,7 +344,6 @@ const AboutContentManager = ({
                   id="content-description"
                   rows={5}
                   placeholder="Enter a description"
-                  disabled={mode === "view"}
                   className="resize-y"
                   {...register("description")}
                   aria-invalid={!!errors.description}
@@ -307,12 +353,17 @@ const AboutContentManager = ({
               </div>
 
               <div className="flex justify-end gap-3 border-t pt-4">
-                <Button type="button" variant="outline" onClick={closeDialog}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeDialog}
+                  disabled={isSubmitting || isUpdating}
+                >
                   Cancel
                 </Button>
 
-                <Button type="submit" disabled={isSubmitting}>
-                  Validate Changes
+                <Button type="submit" disabled={isSubmitting || isUpdating}>
+                  {isSubmitting || isUpdating ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </form>
