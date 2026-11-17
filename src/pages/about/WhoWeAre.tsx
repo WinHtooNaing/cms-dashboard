@@ -40,6 +40,7 @@ import {
   type WhoWeAreFormValues,
   type featureContentFormValues,
 } from "@/schemas/aboutSchema"
+import { ABOUT_SECTION_KEYS } from "@/constants/cms"
 
 type Feature = featureContentFormValues & {
   id: string
@@ -49,18 +50,12 @@ type Feature = featureContentFormValues & {
 type DialogMode = "edit" | "view"
 
 const WhoWeArePage = () => {
-  // Section dialog state
   const [sectionOpen, setSectionOpen] = useState(false)
   const [sectionMode, setSectionMode] = useState<DialogMode>("edit")
 
-  // Feature dialog state
   const [featureOpen, setFeatureOpen] = useState(false)
   const [featureMode, setFeatureMode] = useState<DialogMode>("edit")
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null)
-
-  // --------------------------------------------------
-  // 1. Fetch About Us section and its items
-  // --------------------------------------------------
 
   const { data: documents = [] } = useDocuments()
 
@@ -72,7 +67,7 @@ const WhoWeArePage = () => {
     section,
     isLoading: sectionLoading,
     isError: sectionError,
-  } = useAboutSection("who-we-are")
+  } = useAboutSection(ABOUT_SECTION_KEYS.WHO_WE_ARE)
 
   const {
     data: cmsItems = [],
@@ -80,19 +75,9 @@ const WhoWeArePage = () => {
     isError: itemsError,
   } = useSectionItems(section?.id)
 
-  // --------------------------------------------------
-  // 2. Mutations
-  // --------------------------------------------------
-
   const updateItemMutation = useUpdateItem()
 
-  // Pass the document ID because this hook invalidates
-  // the document's sections query after updating.
   const updateSectionMutation = useUpdateSection(aboutDocument?.id ?? "")
-
-  // --------------------------------------------------
-  // 3. Get section content from backend
-  // --------------------------------------------------
 
   const sectionContent = useMemo<WhoWeAreFormValues>(
     () => ({
@@ -106,10 +91,6 @@ const WhoWeArePage = () => {
     }),
     [section]
   )
-
-  // --------------------------------------------------
-  // 4. Section form
-  // --------------------------------------------------
 
   const {
     register,
@@ -128,29 +109,24 @@ const WhoWeArePage = () => {
     mode: "onTouched",
   })
 
-  // Update form values when backend data arrives.
-  // Don't reset while the user is editing.
   useEffect(() => {
     if (section && !sectionOpen) {
       reset(sectionContent)
     }
   }, [section, sectionContent, sectionOpen, reset])
 
-  // Open section editor
   const openSectionEditor = () => {
     reset(sectionContent)
     setSectionMode("edit")
     setSectionOpen(true)
   }
 
-  // Open section viewer
   const openSectionViewer = () => {
     reset(sectionContent)
     setSectionMode("view")
     setSectionOpen(true)
   }
 
-  // Save section information
   const onSubmitSection = async (data: WhoWeAreFormValues) => {
     if (!section) return
 
@@ -164,15 +140,10 @@ const WhoWeArePage = () => {
     setSectionOpen(false)
   }
 
-  // Close section dialog
   const closeSectionDialog = () => {
     setSectionOpen(false)
     reset(sectionContent)
   }
-
-  // --------------------------------------------------
-  // 5. Feature form
-  // --------------------------------------------------
 
   const {
     register: registerFeature,
@@ -186,7 +157,6 @@ const WhoWeArePage = () => {
     mode: "onTouched",
   })
 
-  // Convert backend items into feature objects.
   const features = useMemo<Feature[]>(
     () =>
       cmsItems
@@ -199,7 +169,6 @@ const WhoWeArePage = () => {
     [cmsItems]
   )
 
-  // Open feature viewer
   const openViewFeature = (feature: Feature) => {
     setSelectedFeature(feature)
     setFeatureMode("view")
@@ -211,7 +180,6 @@ const WhoWeArePage = () => {
     setFeatureOpen(true)
   }
 
-  // Open feature editor
   const openEditFeature = (feature: Feature) => {
     setSelectedFeature(feature)
     setFeatureMode("edit")
@@ -223,7 +191,6 @@ const WhoWeArePage = () => {
     setFeatureOpen(true)
   }
 
-  // Update feature
   const onSubmitFeature = async (data: featureContentFormValues) => {
     if (!selectedFeature || !section) return
 
@@ -244,7 +211,6 @@ const WhoWeArePage = () => {
     })
   }
 
-  // Close feature dialog
   const closeFeatureDialog = () => {
     setFeatureOpen(false)
     setSelectedFeature(null)
@@ -253,10 +219,6 @@ const WhoWeArePage = () => {
       title: "",
     })
   }
-
-  // --------------------------------------------------
-  // 6. Loading and error states
-  // --------------------------------------------------
 
   if (sectionLoading || itemsLoading) {
     return (
@@ -311,10 +273,6 @@ const WhoWeArePage = () => {
       </div>
     )
   }
-
-  // --------------------------------------------------
-  // 7. UI
-  // --------------------------------------------------
 
   return (
     <div className="space-y-8 pt-4 sm:pt-6">

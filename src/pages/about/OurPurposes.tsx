@@ -7,10 +7,11 @@ import { useMemo } from "react"
 import { useAboutSection } from "@/hooks/cms/useAboutSection"
 import { useSectionItems } from "@/hooks/cms/useSectionItems"
 import { useUpdateItem } from "@/hooks/cms/useUpdateItem"
-
+import { ABOUT_SECTION_KEYS } from "@/constants/cms"
 const OurPurposes = () => {
-  const { section, isLoading: sectionLoading } =
-    useAboutSection("mission-vision")
+  const { section, isLoading: sectionLoading } = useAboutSection(
+    ABOUT_SECTION_KEYS.MISSION_VISION
+  )
 
   const { data: cmsItems = [], isLoading: itemsLoading } = useSectionItems(
     section?.id
