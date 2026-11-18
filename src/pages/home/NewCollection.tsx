@@ -1,33 +1,142 @@
-import { Button } from "@/components/ui/button"
+import { useCallback, useMemo } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+
+import { getNewCollectionColumns } from "@/components/home/new-collection/columns"
+import { DataTable } from "@/components/home/new-collection/data-table"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationLink,
-} from "@/components/ui/pagination"
-import { categories, details } from "@/data/categories"
-import { Eye, Plus, Save } from "lucide-react"
+  addNewCollection,
+  deleteNewCollectionItem,
+  getNewCollection,
+  getNewCollectionProduct,
+  type NewCollectionItem,
+} from "@/service/new-collection.service"
+import type { Product } from "@/types/product"
+
+const NEW_COLLECTION_SECTION_ID = "590fc0c0-6785-45d1-9312-f9d681b8480c"
+
+const getProductIdFromItem = (item: NewCollectionItem): string | null => {
+  const content = item.content
+  if (!content) return null
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content) as { productId?: string }
+      return parsed.productId ?? null
+    } catch {
+      return null
+    }
+  }
+  return content.productId ?? null
+}
 
 const NewCollection = () => {
+  const queryClient = useQueryClient()
+
+  const { data: productsData, isPending: isProductsPending } = useQuery({
+    queryKey: ["new-collection-products"],
+    queryFn: getNewCollectionProduct,
+  })
+
+  const { data: collectionData, isPending: isCollectionPending } = useQuery({
+    queryKey: ["new-collection-items", NEW_COLLECTION_SECTION_ID],
+    queryFn: () => getNewCollection(NEW_COLLECTION_SECTION_ID),
+    enabled: Boolean(NEW_COLLECTION_SECTION_ID),
+  })
+
+  const products: Product[] = useMemo(
+    () => productsData?.items ?? [],
+    [productsData]
+  )
+  const items = useMemo(() => collectionData?.data ?? [], [collectionData])
+
+  const itemByProductId = useMemo(() => {
+    const map = new Map<string, NewCollectionItem>()
+    for (const item of items) {
+      const productId = getProductIdFromItem(item)
+      if (productId) map.set(productId, item)
+    }
+    return map
+  }, [items])
+
+  const selectedProductIds = useMemo(
+    () => new Set(itemByProductId.keys()),
+    [itemByProductId]
+  )
+
+  const addMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      if (!NEW_COLLECTION_SECTION_ID) {
+        throw new Error("New Collection section ID is not configured.")
+      }
+      const maxPosition = items.reduce(
+        (max, item) => Math.max(max, Number(item.position) || 0),
+        0
+      )
+      const formData = new FormData()
+      formData.append("position", String(maxPosition + 1))
+      formData.append("content", JSON.stringify({ productId }))
+      return addNewCollection(NEW_COLLECTION_SECTION_ID, formData)
+    },
+    onSuccess: () => {
+      toast.success("New collection updated")
+      queryClient.invalidateQueries({
+        queryKey: ["new-collection-items", NEW_COLLECTION_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add to new collection"
+      )
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const item = itemByProductId.get(productId)
+      if (!item) throw new Error("New collection item not found.")
+      return deleteNewCollectionItem(item.id)
+    },
+    onSuccess: () => {
+      toast.success("New collection updated")
+      queryClient.invalidateQueries({
+        queryKey: ["new-collection-items", NEW_COLLECTION_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove from new collection"
+      )
+    },
+  })
+
+  const isBusy = addMutation.isPending || removeMutation.isPending
+
+  const handleToggle = useCallback(
+    (productId: string, checked: boolean) => {
+      if (!NEW_COLLECTION_SECTION_ID) {
+        toast.error("New Collection section ID is not configured.")
+        return
+      }
+      if (checked) {
+        if (itemByProductId.has(productId)) return
+        addMutation.mutate(productId)
+      } else {
+        if (!itemByProductId.has(productId)) return
+        removeMutation.mutate(productId)
+      }
+    },
+    [itemByProductId, addMutation, removeMutation]
+  )
+
+  const columns = useMemo(
+    () => getNewCollectionColumns(selectedProductIds, handleToggle, isBusy),
+    [selectedProductIds, handleToggle, isBusy]
+  )
+
+  const isPending = isProductsPending || isCollectionPending
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -39,149 +148,16 @@ const NewCollection = () => {
             Manage your New Collections
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Plus /> Add details
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Choose home products details</DialogTitle>
-                <DialogDescription>
-                  Select products details that you want to show on the home page
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid max-h-[55vh] gap-2 overflow-y-auto">
-                {details.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-muted/50"
-                  >
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
-                      checked={category.visible}
-                    />
-
-                    <span className="text-sm font-medium">
-                      {category.title}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" />}>
-                  Cancel
-                </DialogClose>
-                <DialogClose render={<Button />}>Save selection</DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Eye /> See Related Product
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl min-w-[60%]">
-              <DialogHeader>
-                <DialogTitle>New Collection preview</DialogTitle>
-                <DialogDescription>
-                  How your New Collecton can look on the home page.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid max-h-[70vh] grid-cols-3 gap-3 overflow-y-auto md:grid-cols-5">
-                {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="overflow-hidden rounded-xl border bg-card"
-                  >
-                    <img
-                      src={category.imageUrl}
-                      alt={category.name}
-                      className="aspect-square w-full object-cover"
-                    />
-                    <p className="p-2 text-sm font-medium">{category.name}</p>
-                  </div>
-                ))}
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Save /> Choose for home
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Choose home new collection</DialogTitle>
-                <DialogDescription>
-                  Select new collection customers should see on the home page.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid max-h-[55vh] gap-2 overflow-y-auto">
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-muted/50"
-                  >
-                    <input type="checkbox" className="size-4 accent-primary" />
-                    <img
-                      src={category.imageUrl}
-                      alt=""
-                      className="size-10 rounded-md object-cover"
-                    />
-                    <span className="text-sm font-medium">{category.name}</span>
-                  </label>
-                ))}
-              </div>
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" />}>
-                  Cancel
-                </DialogClose>
-                <DialogClose render={<Button />}>Save selection</DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle>All New Collections</CardTitle>
-          <CardDescription>
-            {categories.length} new collection in your catalog ·{" "}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {categories.map((category) => (
-            <Card key={category.id} className="overflow-hidden py-0">
-              <img
-                src={category.imageUrl}
-                alt={category.name}
-                className="aspect-4/3 w-full object-cover"
-              />
-              <div className="flex items-center justify-between gap-2 p-3">
-                <div>
-                  <p className="font-medium">{category.name}</p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </CardContent>
-        <div className="flex flex-col items-center justify-center">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink>1</PaginationLink>
-              </PaginationItem>
-
-              <PaginationItem>
-                <PaginationNext />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      </Card>
+      <div>
+        {isPending ? (
+          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+            Loading products...
+          </div>
+        ) : (
+          <DataTable columns={columns} data={products} />
+        )}
+      </div>
     </div>
   )
 }

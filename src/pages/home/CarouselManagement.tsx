@@ -1,62 +1,115 @@
-import { CheckCircle2, CircleOff, ImagePlus, Images, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { carouselData } from "@/data/carouselData"
-import type { Carousel } from "@/types/carousel"
 import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import CarouselCard from "@/components/home/CarouselCard"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { Plus } from "lucide-react"
+
 import CarouselDeleteDialog from "@/components/home/CarouselDeleteDialog"
-import CarouselViewDialog from "@/components/home/CarouselViewDialog"
 import CarouselFormDialog from "@/components/home/CarouselFormDialog"
+import { getCarouselColumns } from "@/components/home/carousel/columns"
+import { DataTable } from "@/components/home/carousel/data-table"
+import { Button } from "@/components/ui/button"
+import { getApiErrorMessage } from "@/lib/api-error"
+import {
+  createImageCarousel,
+  deleteImageCarousel,
+  getImageCarousel,
+  updateImageCarousel,
+} from "@/service/carousel.service"
+import type { Carousel } from "@/types/carousel"
+import type { CarouselSchemaValues } from "@/schemas/carouselSchema"
+
+const sectionId = "51f6ac36-14e0-448e-894c-448f6d579934"
+const queryKey = ["carousels", sectionId]
+
+const createRandomPosition = (items: Carousel[]) => {
+  const maxPosition = 2_147_483_647
+  const existingPositions = new Set(items.map((item) => item.position))
+  let position = Math.floor(Math.random() * maxPosition) + 1
+
+  while (existingPositions.has(position)) {
+    position = (position % maxPosition) + 1
+  }
+
+  return position
+}
+
 const CarouselManagement = () => {
-  const [carousels] = useState<Carousel[]>(carouselData)
-  const [deleteOpen, setDeleteOpen] = useState(false)
+  const queryClient = useQueryClient()
   const [formOpen, setFormOpen] = useState(false)
-  const [viewOpen, setViewOpen] = useState(false)
-  const totalCarousels = carousels.length
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [selectedCarousel, setSelectedCarousel] = useState<Carousel | null>(
     null
   )
-  const activeCarousels = carousels.filter(
-    (carousel) => carousel.isActive
-  ).length
-  const handleDelete = (carousel: Carousel) => {
-    setSelectedCarousel(carousel)
-    setDeleteOpen(true)
-  }
-  const viewDialog = (carousel: Carousel) => {
-    setSelectedCarousel(carousel)
-    setViewOpen(true)
-  }
-  const handleEdit = (carousel: Carousel) => {
-    setSelectedCarousel(carousel)
-    setFormOpen(true)
-  }
+
+  const {
+    data: carousels = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      const response = await getImageCarousel(sectionId)
+      return response.data.map((item) => ({
+        id: item.id,
+        sectionId: item.sectionId,
+        position: item.position,
+        ...item.content,
+      }))
+    },
+  })
+
   const handleAdd = () => {
     setSelectedCarousel(null)
     setFormOpen(true)
   }
-  const inactiveCarousels = totalCarousels - activeCarousels
-  const stats = [
-    {
-      title: "Total Carousels",
-      value: totalCarousels,
-      icon: Images,
-      description: "All homepage carousels",
-    },
-    {
-      title: "Active Carousels",
-      value: activeCarousels,
-      icon: CheckCircle2,
-      description: "Currently enabled",
-    },
-    {
-      title: "Inactive Carousels",
-      value: inactiveCarousels,
-      icon: CircleOff,
-      description: "Currently disabled",
-    },
-  ]
+
+  const handleEdit = (carousel: Carousel) => {
+    setSelectedCarousel(carousel)
+    setFormOpen(true)
+  }
+
+  const handleDeletePrompt = (carousel: Carousel) => {
+    setSelectedCarousel(carousel)
+    setDeleteOpen(true)
+  }
+
+  const handleSave = async (values: CarouselSchemaValues) => {
+    const position =
+      selectedCarousel?.position ?? createRandomPosition(carousels)
+    const formData = new FormData()
+    formData.append("position", String(position))
+    formData.append(
+      "content",
+      JSON.stringify({
+        title: values.title,
+        description: values.description,
+        imageUrl: values.imageUrl,
+      })
+    )
+
+    if (values.image) {
+      formData.append("image", values.image)
+    } else if (!selectedCarousel) {
+      throw new Error("Please upload a carousel image.")
+    }
+
+    if (selectedCarousel) {
+      await updateImageCarousel(selectedCarousel.id, formData)
+    } else {
+      await createImageCarousel(sectionId, formData)
+    }
+
+    await queryClient.invalidateQueries({ queryKey })
+  }
+
+  const handleDelete = async (carousel: Carousel) => {
+    await deleteImageCarousel(carousel.id)
+    await queryClient.invalidateQueries({ queryKey })
+    setSelectedCarousel(null)
+  }
+
+  const columns = getCarouselColumns(handleEdit, handleDeletePrompt)
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
@@ -65,104 +118,62 @@ const CarouselManagement = () => {
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
             Carousel Management
           </h1>
-
           <p className="text-sm text-muted-foreground">
             Manage your homepage carousel images, titles, and descriptions.
           </p>
         </div>
-
         <Button onClick={handleAdd}>
           <Plus className="size-4" />
           Add New Carousel
         </Button>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {stats.map((stat) => {
-          const Icon = stat.icon
 
-          return (
-            <Card key={stat.title}>
-              <CardContent className="flex items-center justify-between px-5 py-0.5">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </p>
-
-                  <h2 className="text-2xl font-semibold">
-                    {stat.value.toString().padStart(2, "0")}
-                  </h2>
-
-                  <p className="text-xs text-muted-foreground">
-                    {stat.description}
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-primary/10 p-3">
-                  <Icon className="size-6 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">Homepage Carousels</h2>
-
-            <p className="text-sm text-muted-foreground">
-              View and manage your existing carousel content.
+      <div className="container mx-auto">
+        {isLoading ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Loading carousels...
+          </p>
+        ) : isError ? (
+          <div className="space-y-3 py-12 text-center">
+            <p className="text-sm text-destructive">
+              {getApiErrorMessage(error)}
             </p>
+            <Button variant="outline" onClick={() => void refetch()}>
+              Try again
+            </Button>
           </div>
-        </div>
-        {carousels.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="mb-4 rounded-full bg-muted p-4">
-                <ImagePlus className="size-8 text-muted-foreground" />
-              </div>
-
-              <h3 className="text-lg font-semibold">No Carousels Found</h3>
-
-              <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                You haven't added any homepage carousels yet. Start by creating
-                your first carousel.
-              </p>
-
-              <Button className="mt-5">
-                <Plus className="size-4" />
-                Add Your First Carousel
-              </Button>
-            </CardContent>
-          </Card>
+        ) : carousels.length === 0 ? (
+          <div className="rounded-md border py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              No carousels yet. Add one to get started.
+            </p>
+            <Button className="mt-4" onClick={handleAdd}>
+              <Plus className="size-4" />
+              Add New Carousel
+            </Button>
+          </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {carousels.map((carousel) => (
-              <CarouselCard
-                key={carousel.id}
-                carousel={carousel}
-                onDelete={handleDelete}
-                onView={viewDialog}
-                onEdit={handleEdit}
-              />
-            ))}
-          </div>
+          <DataTable columns={columns} data={carousels} />
         )}
       </div>
-      <CarouselDeleteDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        carousel={selectedCarousel}
-      />
+
       <CarouselFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) setSelectedCarousel(null)
+        }}
         selectedCarousel={selectedCarousel}
+        onSave={handleSave}
       />
-      <CarouselViewDialog
-        open={viewOpen}
-        onOpenChange={setViewOpen}
+      <CarouselDeleteDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open)
+          if (!open) setSelectedCarousel(null)
+        }}
         carousel={selectedCarousel}
+        onDelete={handleDelete}
       />
     </div>
   )

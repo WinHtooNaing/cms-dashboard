@@ -1,7 +1,5 @@
 import type { Carousel } from "@/types/carousel"
 
-import { Badge } from "@/components/ui/badge"
-
 import {
   Dialog,
   DialogContent,
@@ -37,7 +35,7 @@ const CarouselViewDialog = ({
         <div className="scrollbar-none space-y-6 overflow-y-auto">
           <div className="overflow-hidden rounded-lg border">
             <img
-              src={carousel.image}
+              src={carousel.imageUrl}
               alt={carousel.title}
               className="aspect-video w-full object-cover"
             />
@@ -59,14 +57,6 @@ const CarouselViewDialog = ({
             <p className="text-sm leading-relaxed text-muted-foreground">
               {carousel.description}
             </p>
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <span className="text-sm font-medium">Carousel Status</span>
-
-            <Badge variant={carousel.isActive ? "default" : "secondary"}>
-              {carousel.isActive ? "Active" : "Inactive"}
-            </Badge>
           </div>
         </div>
       </DialogContent>

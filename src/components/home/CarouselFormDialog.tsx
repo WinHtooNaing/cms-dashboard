@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react"
 
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { ImagePlus, Upload } from "lucide-react"
 
-import type { Carousel, CarouselFormValues } from "@/types/carousel"
-
-import { carouselSchema } from "@/schemas/carouselSchema"
+import {
+  carouselSchema,
+  type CarouselSchemaValues,
+} from "@/schemas/carouselSchema"
+import type { Carousel } from "@/types/carousel"
+import { getApiErrorMessage } from "@/lib/api-error"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 
 import {
@@ -29,22 +31,25 @@ interface CarouselFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedCarousel: Carousel | null
+  onSave: (values: CarouselFormValues) => Promise<void>
 }
+
+type CarouselFormValues = CarouselSchemaValues
 
 const emptyValues: CarouselFormValues = {
   title: "",
   description: "",
   image: null,
   imageUrl: "",
-  isActive: true,
 }
 
 const CarouselFormDialog = ({
   open,
   onOpenChange,
   selectedCarousel,
+  onSave,
 }: CarouselFormDialogProps) => {
-  const [preview, setPreview] = useState("")
+  const [uploadedPreview, setUploadedPreview] = useState("")
 
   const isEditing = selectedCarousel !== null
 
@@ -54,9 +59,10 @@ const CarouselFormDialog = ({
     mode: "onSubmit",
   })
 
-  const selectedImage = form.watch("image")
-
-  const existingImage = form.watch("imageUrl")
+  const existingImage = useWatch({
+    control: form.control,
+    name: "imageUrl",
+  })
 
   useEffect(() => {
     if (!open) return
@@ -66,8 +72,7 @@ const CarouselFormDialog = ({
         title: selectedCarousel.title,
         description: selectedCarousel.description,
         image: null,
-        imageUrl: selectedCarousel.image,
-        isActive: selectedCarousel.isActive,
+        imageUrl: selectedCarousel.imageUrl,
       })
     } else {
       form.reset(emptyValues)
@@ -75,18 +80,18 @@ const CarouselFormDialog = ({
   }, [open, selectedCarousel, form])
 
   useEffect(() => {
-    if (selectedImage) {
-      const imageUrl = URL.createObjectURL(selectedImage)
+    if (!uploadedPreview) return
+    return () => URL.revokeObjectURL(uploadedPreview)
+  }, [uploadedPreview])
 
-      setPreview(imageUrl)
+  const preview = uploadedPreview || existingImage
 
-      return () => {
-        URL.revokeObjectURL(imageUrl)
-      }
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setUploadedPreview("")
     }
-
-    setPreview(existingImage)
-  }, [selectedImage, existingImage])
+    onOpenChange(nextOpen)
+  }
 
   const handleImageChange = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -96,17 +101,28 @@ const CarouselFormDialog = ({
 
     if (!file) return
 
+    setUploadedPreview(URL.createObjectURL(file))
     onChange(file)
 
     event.target.value = ""
   }
 
-  const onSubmit = async (_values: CarouselFormValues) => {
-    console.log("Form submitted with values:", _values)
+  const onSubmit = async (values: CarouselFormValues) => {
+    try {
+      await onSave(values)
+      toast.success(
+        isEditing
+          ? "Carousel updated successfully."
+          : "Carousel created successfully."
+      )
+      handleOpenChange(false)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="text-xl">
@@ -243,40 +259,11 @@ const CarouselFormDialog = ({
             )}
           />
 
-          <Controller
-            control={form.control}
-            name="isActive"
-            render={({ field, fieldState }) => (
-              <Field
-                orientation="horizontal"
-                data-invalid={fieldState.invalid}
-                className="flex items-center justify-between rounded-lg border p-4"
-              >
-                <div className="space-y-1">
-                  <FieldLabel htmlFor="carousel-status">
-                    Carousel Status
-                  </FieldLabel>
-
-                  <p className="text-xs text-muted-foreground">
-                    Enable or disable this carousel.
-                  </p>
-                </div>
-
-                <Switch
-                  id="carousel-status"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  aria-invalid={fieldState.invalid}
-                />
-              </Field>
-            )}
-          />
-
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               Cancel
             </Button>
