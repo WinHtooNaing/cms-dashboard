@@ -34,6 +34,7 @@ import PermissionRoute from "./components/auth/PermissionRoute"
 import UserManagement from "./pages/user/Users"
 import RolesPage from "./pages/role/Roles"
 import BrandPage from "./pages/brand/Brand"
+import CategoryPage from "./pages/category/Category"
 
 const router = createBrowserRouter([
   {
@@ -118,6 +119,15 @@ const router = createBrowserRouter([
               {
                 path: "products/:id",
                 element: <ProductView />,
+              },
+            ],
+          },
+          {
+            element: <PermissionRoute permission="category:read" />,
+            children: [
+              {
+                path: "category",
+                element: <CategoryPage />,
               },
             ],
           },

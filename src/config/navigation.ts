@@ -7,7 +7,6 @@ import {
   Package,
   ShoppingCart,
   User,
-
 } from "lucide-react"
 
 import type { LucideIcon } from "lucide-react"
@@ -31,7 +30,6 @@ export type NavigationGroup = {
 }
 
 export const navigationGroups: NavigationGroup[] = [
-
   // E-COMMERCE
   {
     title: "E-commerce",
@@ -81,19 +79,17 @@ export const navigationGroups: NavigationGroup[] = [
 
       {
         title: "Categories",
-        url: "/home/category",
+        url: "/category",
         icon: LayoutDashboard,
 
         items: [
           {
             title: "Categories",
-            url: "/home/category",
+            url: "/category",
             permission: "category:read",
           },
         ],
       },
-
-     
 
       {
         title: "User Management",
@@ -116,99 +112,98 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
 
- 
   // CONTENT MANAGEMENT
 
-{
-  title: "Content Management",
+  {
+    title: "Content Management",
 
-  items: [
-    {
-      title: "Home Page",
-      url: "/home",
-      icon: House,
-      items: [
-        {
-          title: "Image Carousel",
-          url: "/home",
-          permission: "cms:read",
-        },
-        {
-          title: "Category",
-          url: "/home/category",
-          permission: "cms:read",
-        },
-        {
-          title: "New Collection",
-          url: "/home/new-collection",
-          permission: "cms:read",
-        },
-      ],
-    },
+    items: [
+      {
+        title: "Home Page",
+        url: "/home",
+        icon: House,
+        items: [
+          {
+            title: "Image Carousel",
+            url: "/home",
+            permission: "cms:read",
+          },
+          {
+            title: "Category",
+            url: "/home/category",
+            permission: "cms:read",
+          },
+          {
+            title: "New Collection",
+            url: "/home/new-collection",
+            permission: "cms:read",
+          },
+        ],
+      },
 
-    {
-      title: "About Us",
-      url: "/about",
-      icon: Info,
-      items: [
-        {
-          title: "Description",
-          url: "/about/description",
-          permission: "cms:read",
-        },
-        {
-          title: "Who We Are",
-          url: "/about/whoweare",
-          permission: "cms:read",
-        },
-        {
-          title: "Our Purposes",
-          url: "/about/ourpurposes",
-          permission: "cms:read",
-        },
-        {
-          title: "Core Values",
-          url: "/about/corevalues",
-          permission: "cms:read",
-        },
-        {
-          title: "Why Choose Us",
-          url: "/about/whychooseus",
-          permission: "cms:read",
-        },
-      ],
-    },
+      {
+        title: "About Us",
+        url: "/about",
+        icon: Info,
+        items: [
+          {
+            title: "Description",
+            url: "/about/description",
+            permission: "cms:read",
+          },
+          {
+            title: "Who We Are",
+            url: "/about/whoweare",
+            permission: "cms:read",
+          },
+          {
+            title: "Our Purposes",
+            url: "/about/ourpurposes",
+            permission: "cms:read",
+          },
+          {
+            title: "Core Values",
+            url: "/about/corevalues",
+            permission: "cms:read",
+          },
+          {
+            title: "Why Choose Us",
+            url: "/about/whychooseus",
+            permission: "cms:read",
+          },
+        ],
+      },
 
-    {
-      title: "Contact Us",
-      url: "/contact",
-      icon: Contact,
-      items: [
-        {
-          title: "Contact Description",
-          url: "/contact/description",
-          permission: "cms:read",
-        },
-      ],
-    },
+      {
+        title: "Contact Us",
+        url: "/contact",
+        icon: Contact,
+        items: [
+          {
+            title: "Contact Description",
+            url: "/contact/description",
+            permission: "cms:read",
+          },
+        ],
+      },
 
-    {
-      title: "Global Settings",
-      url: "/header",
-      icon: LayoutDashboard,
-      items: [
-        {
-          title: "Header",
-          url: "/header",
-          permission: "cms:read",
-        },
-        {
-          title: "Footer",
-          url: "/footer",
-          permission: "cms:read",
-        },
-      ],
-    },
-  ],
-},
+      {
+        title: "Global Settings",
+        url: "/header",
+        icon: LayoutDashboard,
+        items: [
+          {
+            title: "Header",
+            url: "/header",
+            permission: "cms:read",
+          },
+          {
+            title: "Footer",
+            url: "/footer",
+            permission: "cms:read",
+          },
+        ],
+      },
+    ],
+  },
 ]
