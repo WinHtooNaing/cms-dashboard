@@ -145,7 +145,7 @@ export default function ProductTable() {
   })
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0 space-y-4">
       {/* Toolbar */}
       <div className="flex justify-between gap-2 py-4 max-sm:flex-col">
         <div className="flex gap-2 max-sm:flex-col">
@@ -190,110 +190,112 @@ export default function ProductTable() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <table.FlexRender header={header} />
-                    )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody>
-            {isPending ? (
-              <ProductTableSkeleton rowCount={8} />
-            ) : isError ? (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getVisibleLeafColumns().length}
-                  className="h-32 text-center"
-                >
-                  <div className="space-y-1">
-                    <p className="font-medium text-destructive">
-                      Failed to load products
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {error instanceof Error
-                        ? error.message
-                        : "Something went wrong."}
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : products.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      <table.FlexRender cell={cell} />
-                    </TableCell>
+      <div className="w-full max-w-full min-w-0 overflow-hidden rounded-md border">
+        <div className="w-full overflow-x-auto">
+          <Table className="min-w-300">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder ? null : (
+                        <table.FlexRender header={header} />
+                      )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getVisibleLeafColumns().length}
-                  className="h-32 text-center"
-                >
-                  <div className="space-y-1">
-                    <p className="font-medium">No products found</p>
-                    <p className="text-sm text-muted-foreground">
-                      Try changing your search keywords.
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between py-4">
-        <div className="text-sm text-muted-foreground">
-          Showing {products.length} of {pagination?.total ?? 0} products
-          {isFetching && <span className="ml-2">Updating...</span>}
+            <TableBody>
+              {isPending ? (
+                <ProductTableSkeleton rowCount={8} />
+              ) : isError ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getVisibleLeafColumns().length}
+                    className="h-32 text-center"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium text-destructive">
+                        Failed to load products
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {error instanceof Error
+                          ? error.message
+                          : "Something went wrong."}
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : products.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        <table.FlexRender cell={cell} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getVisibleLeafColumns().length}
+                    className="h-32 text-center"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium">No products found</p>
+                      <p className="text-sm text-muted-foreground">
+                        Try changing your search keywords.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
-          </span>
+        {/* Pagination */}
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {products.length} of {pagination?.total ?? 0} products
+            {isFetching && <span className="ml-2">Updating...</span>}
+          </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page - 1)}
-            disabled={page <= 1 || isFetching}
-          >
-            Previous
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Page {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
+            </span>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage(page + 1)}
-            disabled={page >= (pagination?.totalPages ?? 1) || isFetching}
-          >
-            Next
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page - 1)}
+              disabled={page <= 1 || isFetching}
+            >
+              Previous
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= (pagination?.totalPages ?? 1) || isFetching}
+            >
+              Next
+            </Button>
+          </div>
         </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <ProductDialog
+            mode={dialogMode}
+            product={selectedProduct}
+            onClose={() => setOpen(false)}
+          />
+        </Dialog>
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <ProductDialog
-          mode={dialogMode}
-          product={selectedProduct}
-          onClose={() => setOpen(false)}
-        />
-      </Dialog>
     </div>
   )
 }

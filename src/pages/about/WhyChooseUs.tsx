@@ -1,44 +1,65 @@
 import { BadgeCheck } from "lucide-react"
 
-import AboutContentManager, {
-  type AboutContentItem,
-} from "@/components/about/AboutContentManager"
+import AboutContentManager from "@/components/about/AboutContentManager"
+import { useMemo } from "react"
 
-const initialBenefits: AboutContentItem[] = [
-  {
-    id: "quality-products",
-    title: "Quality Products",
-    description:
-      "We focus on offering carefully selected technology products with clear specifications to help customers make informed decisions.",
-  },
-  {
-    id: "convenient-shopping",
-    title: "Convenient Shopping",
-    description:
-      "Our organized categories and straightforward product pages make it easier to discover and compare technology products.",
-  },
-  {
-    id: "helpful-support",
-    title: "Helpful Support",
-    description:
-      "We aim to provide helpful guidance and accessible contact information so customers can get assistance when they need it.",
-  },
-  {
-    id: "modern-technology",
-    title: "Modern Technology",
-    description:
-      "We use modern web technology to deliver a smooth, accessible, and responsive shopping experience across devices.",
-  },
-]
+import { useAboutSection } from "@/hooks/cms/useAboutSection"
+import { useSectionItems } from "@/hooks/cms/useSectionItems"
+import { useUpdateItem } from "@/hooks/cms/useUpdateItem"
+import { ABOUT_SECTION_KEYS } from "@/constants/cms"
 
 const WhyChooseUs = () => {
+  const { section, isLoading: sectionLoading } = useAboutSection(
+    ABOUT_SECTION_KEYS.WHY_CHOOSE_US
+  )
+
+  const { data: cmsItems = [], isLoading: itemsLoading } = useSectionItems(
+    section?.id
+  )
+
+  const updateItemMutation = useUpdateItem()
+
+  const items = useMemo(
+    () =>
+      cmsItems.map((item) => ({
+        id: item.id,
+        position: item.position,
+        title: String(item.content.title ?? ""),
+        description: String(item.content.description ?? ""),
+      })),
+    [cmsItems]
+  )
+
+  const handleUpdate = async (
+    itemId: string,
+    values: {
+      title: string
+      description: string
+    }
+  ) => {
+    if (!section) return
+
+    await updateItemMutation.mutateAsync({
+      itemId,
+      sectionId: section.id,
+      payload: {
+        content: {
+          title: values.title,
+          description: values.description,
+        },
+      },
+    })
+  }
   return (
     <AboutContentManager
       title="Why Choose Us"
-      description="Manage the benefits that explain why customers should choose Tech Haven."
+      description="Manage the reasons customers choose your store."
       icon={BadgeCheck}
       itemLabel="Benefit"
-      initialItems={initialBenefits}
+      items={items}
+      isLoading={sectionLoading || itemsLoading}
+      isUpdating={updateItemMutation.isPending}
+      onUpdate={handleUpdate}
     />
   )
 }

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 
-import { useQuery } from "@tanstack/react-query"
-import { getRoles } from "@/service/role.service"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   ShieldCheck,
   Shield,
@@ -16,8 +15,14 @@ import {
   LockKeyhole,
 } from "lucide-react"
 import type { Permission, Role } from "../../types/roles"
-import { mockPermissions } from "@/data/role-data"
-
+import { toast } from "sonner"
+import {
+  getRoles,
+  getPermissions,
+  createRole,
+  updateRole,
+  setRolePermissions,
+} from "@/service/role.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -53,16 +58,19 @@ import {
 } from "@/components/ui/dialog"
 
 import { Separator } from "@/components/ui/separator"
+import { getApiErrorMessage } from "@/lib/api-error"
 
 const permissionGroups = [
   { name: "Categories", resource: "category" },
   { name: "Products", resource: "product" },
+  { name: "Brands", resource: "brand" },
   { name: "Orders", resource: "order" },
   { name: "Users", resource: "user" },
   { name: "Roles", resource: "role" },
   { name: "Stock", resource: "stock" },
   { name: "Payments", resource: "payment" },
   { name: "Media", resource: "media" },
+  { name: "Content Management", resource: "cms" },
 ]
 
 const permissionLabels: Record<string, string> = {
@@ -77,12 +85,100 @@ const permissionLabels: Record<string, string> = {
 export default function RolesPage() {
   const {
     data: roles = [],
-    isLoading,
-    isError,
-    error,
+    isLoading: isRolesLoading,
+    isError: isRolesError,
+    error: rolesError,
   } = useQuery({
     queryKey: ["roles"],
     queryFn: getRoles,
+  })
+
+  const {
+    data: permissions = [],
+    isLoading: isPermissionsLoading,
+    isError: isPermissionsError,
+  } = useQuery({
+    queryKey: ["rbac", "permissions"],
+    queryFn: getPermissions,
+  })
+  const queryClient = useQueryClient()
+  const createRoleMutation = useMutation({
+    mutationFn: createRole,
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["roles"],
+      })
+
+      toast.success("Role created successfully!")
+
+      setRoleDialogOpen(false)
+      setSelectedRole(null)
+    },
+
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error))
+    },
+  })
+  const updateRoleMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string
+      payload: {
+        name: string
+        description: string
+      }
+    }) => updateRole(id, payload),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["roles"],
+      })
+
+      toast.success("Role updated successfully!")
+
+      setRoleDialogOpen(false)
+      setSelectedRole(null)
+    },
+
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error))
+    },
+  })
+  const updatePermissionsMutation = useMutation({
+    mutationFn: ({
+      roleId,
+      permissionIds,
+    }: {
+      roleId: string
+      permissionIds: string[]
+    }) =>
+      setRolePermissions(roleId, {
+        permissionIds,
+      }),
+
+    onSuccess: () => {
+      toast.success("Permissions updated successfully!")
+
+      setPermissionDialogOpen(false)
+      setSelectedRole(null)
+
+      queryClient.invalidateQueries({
+        queryKey: ["roles"],
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: ["auth", "me"],
+      })
+    },
+
+    onError: (error) => {
+      console.error("Permission update error:", error)
+
+      toast.error(getApiErrorMessage(error))
+    },
   })
 
   const [search, setSearch] = useState("")
@@ -105,15 +201,7 @@ export default function RolesPage() {
     )
   }, [roles, search])
 
-  const totalPermissions = useMemo(() => {
-    const uniquePermissionIds = new Set(
-      roles.flatMap((role) =>
-        role.permissions.map((permission) => permission.id)
-      )
-    )
-
-    return uniquePermissionIds.size
-  }, [roles])
+  const totalPermissions = permissions.length
 
   const totalUsers = roles.reduce((total, role) => total + role.userCount, 0)
 
@@ -134,18 +222,25 @@ export default function RolesPage() {
   }
 
   const handleSaveRole = () => {
-    if (!roleName.trim()) return
+    if (!roleName.trim()) {
+      toast.error("Please enter a role name.")
+      return
+    }
 
-    console.log({
-      id: selectedRole?.id,
+    const payload = {
       name: roleName.trim().toUpperCase(),
-      description: roleDescription,
-    })
+      description: roleDescription.trim(),
+    }
 
-    setRoleDialogOpen(false)
-    setSelectedRole(null)
+    if (selectedRole) {
+      updateRoleMutation.mutate({
+        id: selectedRole.id,
+        payload,
+      })
+    } else {
+      createRoleMutation.mutate(payload)
+    }
   }
-
   const handleOpenPermissions = (role: Role) => {
     setSelectedRole(role)
 
@@ -165,7 +260,7 @@ export default function RolesPage() {
   }
 
   const togglePermissionGroup = (resource: string) => {
-    const groupPermissions = mockPermissions.filter((permission) =>
+    const groupPermissions = permissions.filter((permission) =>
       permission.code.startsWith(`${resource}:`)
     )
 
@@ -185,22 +280,22 @@ export default function RolesPage() {
   const handleSavePermissions = () => {
     if (!selectedRole) return
 
-    console.log({
+    updatePermissionsMutation.mutate({
       roleId: selectedRole.id,
       permissionIds: selectedPermissionIds,
     })
-
-    setPermissionDialogOpen(false)
-    setSelectedRole(null)
   }
-  if (isLoading) {
+  if (isRolesLoading) {
     return <div className="p-6">Loading roles...</div>
   }
 
-  if (isError) {
+  if (isRolesError) {
     return (
       <div className="p-6 text-destructive">
-        Failed to load roles: {error.message}
+        Failed to load roles:{" "}
+        {rolesError instanceof Error
+          ? rolesError.message
+          : "Something went wrong."}
       </div>
     )
   }
@@ -429,8 +524,19 @@ export default function RolesPage() {
               Cancel
             </Button>
 
-            <Button onClick={handleSaveRole} disabled={!roleName.trim()}>
-              {selectedRole ? "Save Changes" : "Create Role"}
+            <Button
+              onClick={handleSaveRole}
+              disabled={
+                !roleName.trim() ||
+                createRoleMutation.isPending ||
+                updateRoleMutation.isPending
+              }
+            >
+              {createRoleMutation.isPending || updateRoleMutation.isPending
+                ? "Saving..."
+                : selectedRole
+                  ? "Save Changes"
+                  : "Create Role"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -475,7 +581,7 @@ export default function RolesPage() {
                     size="sm"
                     onClick={() =>
                       setSelectedPermissionIds(
-                        mockPermissions.map((permission) => permission.id)
+                        permissions.map((permission) => permission.id)
                       )
                     }
                   >
@@ -494,9 +600,8 @@ export default function RolesPage() {
 
               <div className="max-h-[40vh] scrollbar-none space-y-4 overflow-y-auto pr-2">
                 {permissionGroups.map((group) => {
-                  const groupPermissions = mockPermissions.filter(
-                    (permission) =>
-                      permission.code.startsWith(`${group.resource}:`)
+                  const groupPermissions = permissions.filter((permission) =>
+                    permission.code.startsWith(`${group.resource}:`)
                   )
 
                   const selectedCount = groupPermissions.filter((permission) =>
@@ -563,9 +668,19 @@ export default function RolesPage() {
                     Cancel
                   </Button>
 
-                  <Button onClick={handleSavePermissions}>
+                  <Button
+                    onClick={handleSavePermissions}
+                    disabled={
+                      updatePermissionsMutation.isPending ||
+                      isPermissionsLoading ||
+                      isPermissionsError
+                    }
+                  >
                     <Check className="mr-2 size-4" />
-                    Save Permissions
+
+                    {updatePermissionsMutation.isPending
+                      ? "Saving..."
+                      : "Save Permissions"}
                   </Button>
                 </div>
               </DialogFooter>

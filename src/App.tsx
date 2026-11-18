@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 
 import { Toaster } from "sonner"
+
 import OrderDetailsPage from "./components/orders/OrderDetailsPage"
 import Main from "./layouts/Main"
 import Login from "./pages/auth/Login"
@@ -28,12 +29,13 @@ import Order from "./pages/order/Orders"
 
 import { GuestRoute } from "./components/auth/GuestRoute"
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"
+import PermissionRoute from "./components/auth/PermissionRoute"
+
 import UserManagement from "./pages/user/Users"
 import RolesPage from "./pages/role/Roles"
 import BrandPage from "./pages/brand/Brand"
 
 const router = createBrowserRouter([
-  // Guest routes
   {
     element: <GuestRoute />,
     children: [
@@ -44,7 +46,6 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Protected dashboard routes
   {
     element: <ProtectedRoute />,
     children: [
@@ -56,78 +57,115 @@ const router = createBrowserRouter([
             index: true,
             element: <Navigate to="/home" replace />,
           },
+
           {
-            path: "home",
-            element: <CarouselManagement />,
+            element: <PermissionRoute permission="cms:read" />,
+            children: [
+              {
+                path: "home",
+                element: <CarouselManagement />,
+              },
+              {
+                path: "home/category",
+                element: <Category />,
+              },
+              {
+                path: "home/new-collection",
+                element: <NewCollection />,
+              },
+              {
+                path: "about/description",
+                element: <Description />,
+              },
+              {
+                path: "about/whoweare",
+                element: <WhoWeAre />,
+              },
+              {
+                path: "about/ourpurposes",
+                element: <OurPurposes />,
+              },
+              {
+                path: "about/corevalues",
+                element: <CoreValues />,
+              },
+              {
+                path: "about/whychooseus",
+                element: <WhyChooseUs />,
+              },
+              {
+                path: "contact/description",
+                element: <ContactDescription />,
+              },
+              {
+                path: "header",
+                element: <Header />,
+              },
+              {
+                path: "footer",
+                element: <Footer />,
+              },
+            ],
           },
+
           {
-            path: "home/category",
-            element: <Category />,
+            element: <PermissionRoute permission="product:read" />,
+            children: [
+              {
+                path: "products",
+                element: <Products />,
+              },
+              {
+                path: "products/:id",
+                element: <ProductView />,
+              },
+            ],
           },
+
           {
-            path: "home/new-collection",
-            element: <NewCollection />,
+            element: <PermissionRoute permission="brand:read" />,
+            children: [
+              {
+                path: "brand",
+                element: <BrandPage />,
+              },
+            ],
           },
+
           {
-            path: "products",
-            element: <Products />,
+            element: <PermissionRoute permission="order:read" />,
+            children: [
+              {
+                path: "order",
+                element: <Order />,
+              },
+              {
+                path: "order/:id",
+                element: <OrderDetailsPage />,
+              },
+            ],
           },
+
           {
-            path: "brand",
-            element: <BrandPage />,
+            element: <PermissionRoute permission="user:manage" />,
+            children: [
+              {
+                path: "users",
+                element: <UserManagement />,
+              },
+            ],
           },
+
           {
-            path: "products/:id",
-            element: <ProductView />,
+            element: <PermissionRoute permission="role:manage" />,
+            children: [
+              {
+                path: "roles",
+                element: <RolesPage />,
+              },
+            ],
           },
-          {
-            path: "about/description",
-            element: <Description />,
-          },
-          {
-            path: "about/whoweare",
-            element: <WhoWeAre />,
-          },
-          {
-            path: "about/ourpurposes",
-            element: <OurPurposes />,
-          },
-          {
-            path: "about/corevalues",
-            element: <CoreValues />,
-          },
-          {
-            path: "about/whychooseus",
-            element: <WhyChooseUs />,
-          },
-          {
-            path: "contact/description",
-            element: <ContactDescription />,
-          },
-          {
-            path: "order",
-            element: <Order />,
-          },
-          {
-            path: "users",
-            element: <UserManagement />,
-          },
-          {
-            path: "roles",
-            element: <RolesPage />,
-          },
-          {
-            path: "/order/:id",
-            element: <OrderDetailsPage />,
-          },
-          {
-            path: "header",
-            element: <Header />,
-          },
-          {
-            path: "footer",
-            element: <Footer />,
-          },
+
           {
             path: "settings",
             element: <Settings />,
@@ -137,7 +175,6 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Optional: handle unknown URLs
   {
     path: "*",
     element: <Navigate to="/" replace />,

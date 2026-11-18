@@ -8,103 +8,67 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-import {
-  BracesIcon,
-  Contact,
-  House,
-  Info,
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  User,
-} from "lucide-react"
-
 import { Logo } from "./logo"
 import { NavMain } from "./nav-main"
 import { NavUser } from "@/components/navbar/nav-user"
-import { useCurrentUser } from "@/hooks/useCurrentUser"
 
-const navigationGroups = [
-  {
-    title: "E-commerce",
-    items: [
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { usePermissions } from "@/hooks/usePermissions"
+
+import {
+  navigationGroups,
+  type NavigationGroup,
+  type NavigationItem,
+} from "@/config/navigation"
+function filterNavigationItems(
+  items: NavigationItem[],
+  hasPermission: (permission: string) => boolean
+): NavigationItem[] {
+  return items.flatMap((item) => {
+    const filteredChildren = item.items?.filter((child) =>
+      child.permission ? hasPermission(child.permission) : true
+    )
+
+    if (item.items && filteredChildren?.length === 0) {
+      return []
+    }
+
+    if (item.permission && !hasPermission(item.permission)) {
+      return []
+    }
+
+    return [
       {
-        title: "Products",
-        url: "/products",
-        icon: Package,
-        items: [{ title: "Products", url: "/products" }],
+        ...item,
+        items: filteredChildren,
       },
-      {
-        title: "Orders",
-        url: "/order",
-        icon: ShoppingCart,
-        items: [{ title: "Orders", url: "/order" }],
-      },
-      {
-        title: "Brand",
-        url: "/brand",
-        icon: BracesIcon,
-        items: [{ title: "Brand", url: "/brand" }],
-      },
-      {
-        title: "User Management",
-        url: "/users",
-        icon: User,
-        items: [
-          { title: "Users", url: "/users" },
-          { title: "Roles", url: "/roles" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Content Management",
-    items: [
-      {
-        title: "Home Page",
-        url: "/home",
-        icon: House,
-        items: [
-          { title: "Image Carousel", url: "/home" },
-          { title: "Category", url: "/home/category" },
-          { title: "New Collection", url: "/home/new-collection" },
-        ],
-      },
-      {
-        title: "About Us",
-        url: "/about",
-        icon: Info,
-        items: [
-          { title: "Description", url: "/about/description" },
-          { title: "Who We Are", url: "/about/whoweare" },
-          { title: "Our Purposes", url: "/about/ourpurposes" },
-          { title: "Core Values", url: "/about/corevalues" },
-          { title: "Why Choose Us", url: "/about/whychooseus" },
-        ],
-      },
-      {
-        title: "Contact Us",
-        url: "/contact",
-        icon: Contact,
-        items: [{ title: "Contact Description", url: "/contact/description" }],
-      },
-      {
-        title: "Global Settings",
-        url: "/header",
-        icon: LayoutDashboard,
-        items: [
-          { title: "Header", url: "/header" },
-          { title: "Footer", url: "/footer" },
-        ],
-      },
-    ],
-  },
-]
+    ]
+  })
+}
+
+function filterNavigationGroups(
+  groups: NavigationGroup[],
+  hasPermission: (permission: string) => boolean
+): NavigationGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: filterNavigationItems(group.items, hasPermission),
+    }))
+    .filter((group) => group.items.length > 0)
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: currentUser } = useCurrentUser()
 
+  const { hasPermission, isPending, isError } = usePermissions()
+
   const user = currentUser?.user
+
+  const filteredNavigation = filterNavigationGroups(
+    navigationGroups,
+    hasPermission
+  )
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -113,9 +77,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent className="overflow-x-hidden">
-        {navigationGroups.map((group) => (
-          <NavMain key={group.title} title={group.title} items={group.items} />
-        ))}
+        {!isPending &&
+          !isError &&
+          filteredNavigation.map((group) => (
+            <NavMain
+              key={group.title}
+              title={group.title}
+              items={group.items}
+            />
+          ))}
       </SidebarContent>
 
       <SidebarFooter>

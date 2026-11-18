@@ -1,4 +1,4 @@
-import CategoryDialog from "@/components/home/CategoryDialog"
+import CategoryDialog from "@/components/category/CategoryDialog"
 import { Button } from "@/components/ui/button"
 import type { Category as CategoryType } from "@/types/category"
 import CategorySkeleton from "@/components/skeletons/CategorySkeleton"
