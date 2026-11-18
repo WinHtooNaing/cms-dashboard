@@ -1,439 +1,160 @@
-import CategoryDialog from "@/components/category/CategoryDialog"
-import { Button } from "@/components/ui/button"
-import type { Category as CategoryType } from "@/types/category"
-import CategorySkeleton from "@/components/skeletons/CategorySkeleton"
-import {
-  getCategories,
-  createCategory,
-  deleteCategory,
-  updateCategory,
-} from "@/service/category.service"
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationLink,
-} from "@/components/ui/pagination"
-
-import { Eye, Pencil, Plus, Save, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useMemo } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import axios from "axios"
+
+import { getCmsCategoryColumns } from "@/components/home/category/columns"
+import { DataTable } from "@/components/home/category/data-table"
+import {
+  addCmsCategory,
+  deleteCmsCategoryItem,
+  getCmsCategory,
+  type CmsCategoryItem,
+} from "@/service/cms.category.service"
+import { getCategories } from "@/service/category.service"
+
+const CATEGORY_SECTION_ID = "2bb344e4-eeb4-4701-b081-6edc4d6cd172"
+
+const getCategoryIdFromItem = (item: CmsCategoryItem): string | null => {
+  const { content } = item
+  if (!content) return null
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content) as { category?: string }
+      return parsed.category ?? null
+    } catch {
+      return null
+    }
+  }
+  return content.category ?? null
+}
 
 const Category = () => {
-  const [categories, setCategories] = useState<CategoryType[]>([])
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const queryClient = useQueryClient()
 
-  const [selectedUpdateCategory, setSelectedUpdateCategory] =
-    useState<CategoryType | null>(null)
+  const {
+    data: categories = [],
+    isPending: isCategoriesPending,
+    isError: isCategoriesError,
+  } = useQuery({
+    queryKey: ["cms-category-options"],
+    queryFn: getCategories,
+  })
 
-  const [selectedDeleteCategory, setSelectedDeleteCategory] =
-    useState<CategoryType | null>(null)
-  const [isUpdateOpen, setIsUpdateOpen] = useState(false)
+  const {
+    data: categoryData,
+    isPending: isItemsPending,
+    isError: isItemsError,
+  } = useQuery({
+    queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+    queryFn: () => getCmsCategory(CATEGORY_SECTION_ID),
+  })
 
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-
-  const [currentPage, setCurrentPage] = useState(1)
-
-  const itemsPerPage = 8
-
-  const totalPages = Math.ceil(categories.length / itemsPerPage)
-
-  const startIndex = (currentPage - 1) * itemsPerPage
-
-  const endIndex = startIndex + itemsPerPage
-
-  const currentCategories = categories.slice(startIndex, endIndex)
-  async function handleUpdateCategory(formData: FormData) {
-    if (!selectedUpdateCategory) return
-
-    try {
-      await updateCategory(selectedUpdateCategory.id, formData)
-
-      setIsUpdateOpen(false)
-      setSelectedUpdateCategory(null)
-
-      await fetchCategories()
-    } catch (error) {
-      console.error("Failed to update category:", error)
-      throw error
+  const items = useMemo(() => categoryData?.data ?? [], [categoryData])
+  const itemByCategoryId = useMemo(() => {
+    const map = new Map<string, CmsCategoryItem>()
+    for (const item of items) {
+      const categoryId = getCategoryIdFromItem(item)
+      if (categoryId) map.set(categoryId, item)
     }
-  }
-  async function handleDeleteCategory() {
-    if (!selectedDeleteCategory) return
+    return map
+  }, [items])
+  const selectedCategoryIds = useMemo(
+    () => new Set(itemByCategoryId.keys()),
+    [itemByCategoryId]
+  )
 
-    try {
-      setIsDeleting(true)
-
-      await deleteCategory(selectedDeleteCategory.id)
-
-      setCategories((prev) =>
-        prev.filter((category) => category.id !== selectedDeleteCategory.id)
+  const addMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const maxPosition = items.reduce(
+        (max, item) => Math.max(max, Number(item.position) || 0),
+        0
       )
+      const formData = new FormData()
+      formData.append("position", String(maxPosition + 1))
+      formData.append("content", JSON.stringify({ category: categoryId }))
+      return addCmsCategory(CATEGORY_SECTION_ID, formData)
+    },
+    onSuccess: () => {
+      toast.success("Home page categories updated")
+      queryClient.invalidateQueries({
+        queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add home page category"
+      )
+    },
+  })
 
-      toast.success("Category deleted successfully!")
+  const removeMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const item = itemByCategoryId.get(categoryId)
+      if (!item) throw new Error("Home page category item not found.")
+      return deleteCmsCategoryItem(item.id)
+    },
+    onSuccess: () => {
+      toast.success("Home page categories updated")
+      queryClient.invalidateQueries({
+        queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove home page category"
+      )
+    },
+  })
 
-      setIsDeleteOpen(false)
-      setSelectedDeleteCategory(null)
-    } catch (error) {
-      console.error("Delete category error:", error)
-
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message
-
-        toast.error(
-          Array.isArray(message)
-            ? message.join(", ")
-            : message || "Failed to delete category."
-        )
+  const isBusy = addMutation.isPending || removeMutation.isPending
+  const handleToggle = useCallback(
+    (categoryId: string, checked: boolean) => {
+      if (checked) {
+        if (itemByCategoryId.has(categoryId)) return
+        addMutation.mutate(categoryId)
       } else {
-        toast.error("Something went wrong. Please try again.")
+        if (!itemByCategoryId.has(categoryId)) return
+        removeMutation.mutate(categoryId)
       }
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-  async function fetchCategories() {
-    try {
-      setIsLoading(true)
-      setError(null)
+    },
+    [itemByCategoryId, addMutation, removeMutation]
+  )
 
-      console.log("Fetching categories...")
+  const columns = useMemo(
+    () => getCmsCategoryColumns(selectedCategoryIds, handleToggle, isBusy),
+    [selectedCategoryIds, handleToggle, isBusy]
+  )
 
-      const data = await getCategories()
+  const isPending = isCategoriesPending || isItemsPending
+  const hasError = isCategoriesError || isItemsError
 
-      console.log("Categories fetched successfully:", data)
-
-      setCategories(data)
-    } catch (error) {
-      console.error("Failed to fetch categories:", error)
-
-      if (axios.isAxiosError(error)) {
-        console.error("Status:", error.response?.status)
-        console.error("Backend response:", error.response?.data)
-      }
-
-      setError(
-        error instanceof Error ? error : new Error("Failed to fetch categories")
-      )
-
-      toast.error("Failed to load categories")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  async function handleCreateCategory(formData: FormData) {
-    await createCategory(formData)
-
-    setIsCreateOpen(false)
-
-    setCurrentPage(1)
-
-    await fetchCategories()
-  }
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Home Page Categories
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage your catalog and choose
+            Choose the categories to display on the home page.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Eye /> See category
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl min-w-[60%]">
-              <DialogHeader>
-                <DialogTitle>Category preview</DialogTitle>
-                <DialogDescription>
-                  How your categories can look on the home page.
-                </DialogDescription>
-              </DialogHeader>
-              {/* <div className="grid max-h-[70vh] grid-cols-3 gap-3 overflow-y-auto md:grid-cols-5">
-                {categories.map((category) => (
-                  <div
-                    key={category.id}
-                    className="overflow-hidden rounded-xl border bg-card"
-                  >
-                    <img
-                      src={category.imageUrl}
-                      alt={category.name}
-                      className="aspect-square w-full object-cover"
-                    />
-                    <p className="p-2 text-sm font-medium">{category.name}</p>
-                  </div>
-                ))}
-              </div> */}
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger render={<Button />}>
-              <Save /> Choose for home
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Choose home categories</DialogTitle>
-                <DialogDescription>
-                  Select the categories customers should see on the home page.
-                </DialogDescription>
-              </DialogHeader>
-              {/* <div className="grid max-h-[55vh] gap-2 overflow-y-auto">
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex cursor-pointer items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-muted/50"
-                  >
-                    <input type="checkbox" className="size-4 accent-primary" />
-                    <img
-                      src={category.imageUrl}
-                      alt=""
-                      className="size-10 rounded-md object-cover"
-                    />
-                    <span className="text-sm font-medium">{category.name}</span>
-                  </label>
-                ))}
-              </div> */}
-              <DialogFooter>
-                <DialogClose render={<Button variant="outline" />}>
-                  Cancel
-                </DialogClose>
-                <DialogClose render={<Button />}>Save selection</DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger render={<Button />}>
-              <Plus />
-              Add category
-            </DialogTrigger>
-
-            <CategoryDialog mode="create" onSave={handleCreateCategory} />
-          </Dialog>
-        </div>
       </div>
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle>All categories</CardTitle>
-          <CardDescription>
-            {categories.length} categories in your catalog ·
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoading && <CategorySkeleton />}
-          {!isLoading && error && (
-            <div className="col-span-full flex flex-col items-center gap-3 py-12">
-              <p className="text-sm text-destructive">{error.message}</p>
-
-              <Button variant="outline" onClick={fetchCategories}>
-                Try again
-              </Button>
-            </div>
-          )}
-
-          {!isLoading && !error && categories.length === 0 && (
-            <div className="col-span-full py-12 text-center text-muted-foreground">
-              No categories found.
-            </div>
-          )}
-
-          {!isLoading &&
-            currentCategories.map((category) => (
-              <Card key={category.id} className="overflow-hidden py-0">
-                {category.imageUrl ? (
-                  <img
-                    src={category.imageUrl}
-                    alt={category.name}
-                    className="aspect-4/3 w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex aspect-4/3 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-                    No image available
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between gap-2 p-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{category.name}</p>
-
-                    <p className="text-xs text-muted-foreground">
-                      {category.isActive ? "Active" : "Inactive"}
-                    </p>
-                  </div>
-
-                  <div className="flex shrink-0 gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Update ${category.name}`}
-                      onClick={() => {
-                        setSelectedUpdateCategory(category)
-                        setIsUpdateOpen(true)
-                      }}
-                    >
-                      <Pencil />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="text-destructive hover:text-destructive"
-                      aria-label={`Delete ${category.name}`}
-                      onClick={() => {
-                        setSelectedDeleteCategory(category)
-                        setIsDeleteOpen(true)
-                      }}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-        </CardContent>
-
-        {!isLoading && !error && totalPages > 1 && (
-          <div className="flex justify-center pb-4">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
-                    className={
-                      currentPage === 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-
-                {Array.from(
-                  { length: totalPages },
-                  (_, index) => index + 1
-                ).map((page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      isActive={currentPage === page}
-                      onClick={() => setCurrentPage(page)}
-                      className="cursor-pointer"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
-                    className={
-                      currentPage === totalPages
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+      <div>
+        {isPending ? (
+          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+            Loading categories...
           </div>
+        ) : hasError ? (
+          <div className="rounded-md border p-6 text-center text-sm text-destructive">
+            Failed to load home page categories.
+          </div>
+        ) : (
+          <DataTable columns={columns} data={categories} />
         )}
-      </Card>
-      <Dialog
-        open={isDeleteOpen}
-        onOpenChange={(open) => {
-          setIsDeleteOpen(open)
-
-          if (!open) {
-            setSelectedDeleteCategory(null)
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-
-            <DialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                {selectedDeleteCategory?.name}
-              </span>
-              ?
-              <br />
-              This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteOpen(false)}
-              disabled={isDeleting}
-            >
-              Cancel
-            </Button>
-
-            <Button
-              variant="destructive"
-              onClick={handleDeleteCategory}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog
-        open={isUpdateOpen}
-        onOpenChange={(open) => {
-          setIsUpdateOpen(open)
-
-          if (!open) {
-            setSelectedUpdateCategory(null)
-          }
-        }}
-      >
-        {selectedUpdateCategory && (
-          <CategoryDialog
-            key={selectedUpdateCategory.id}
-            mode="update"
-            category={selectedUpdateCategory}
-            onSave={handleUpdateCategory}
-          />
-        )}
-      </Dialog>
+      </div>
     </div>
   )
 }
