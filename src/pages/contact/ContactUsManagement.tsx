@@ -1,39 +1,75 @@
-import { useState } from "react"
-
 import { Clock3, Mail, MapPin, Pencil, Phone } from "lucide-react"
+import { useState } from "react"
 
 import { formatBusinessHours } from "@/util/formatBusinessHours"
 import { type ContactUsValues } from "@/schemas/contactUsSchema"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+
 import GetInTouchFormDialog from "@/components/contactUs/GetInTouchFormDialog"
 
-const initialContact: ContactUsValues = {
-  emailTitle: "Email Us",
-  emailDescription: "Send us an email anytime.",
-  email: "support@techhaven.com",
-
-  phoneTitle: "Call Us",
-  phoneDescription: "Our team is ready to help.",
-  phone: "+95 9 123 456 789",
-
-  addressTitle: "Visit Us",
-  addressDescription: "Come and visit our store.",
-  address: "Yangon, Myanmar",
-
-  businessHoursTitle: "Business Hours",
-  businessHoursDescription: "We're available during:",
-
-  workingDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-
-  openingTime: "08:30",
-  closingTime: "17:00",
-}
+import { useContactSection } from "@/hooks/cms/useContactSection"
+import { useUpdateSection } from "@/hooks/cms/useUpdateSection"
 
 const ContactUsManagement = () => {
-  const [contact, setContact] = useState<ContactUsValues>(initialContact)
-
   const [editOpen, setEditOpen] = useState(false)
+
+  const { documentId, section, isLoading, isError, error } = useContactSection()
+
+  const updateSectionMutation = useUpdateSection(documentId ?? "")
+
+  const contact = section?.content as ContactUsValues | undefined
+
+  const handleSave = async (data: ContactUsValues) => {
+    if (!section) return
+
+    await updateSectionMutation.mutateAsync({
+      sectionId: section.id,
+      payload: {
+        content: data,
+      },
+    })
+
+    setEditOpen(false)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 pt-6">
+        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
+
+        <div className="h-64 animate-pulse rounded-xl bg-muted" />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-4 pt-6">
+        <h1 className="text-2xl font-bold">Contact Us Management</h1>
+
+        <p className="text-sm text-destructive">
+          {error instanceof Error
+            ? error.message
+            : "Unable to load Contact Us content. Please try again."}
+        </p>
+      </div>
+    )
+  }
+
+  if (!section || !contact) {
+    return (
+      <div className="space-y-4 pt-6">
+        <h1 className="text-2xl font-bold">Contact Us Management</h1>
+
+        <p className="text-sm text-muted-foreground">
+          Contact Us content is not available. Please check whether the Contact
+          Us document and Get in Touch section have been created in the CMS.
+        </p>
+      </div>
+    )
+  }
 
   const cards = [
     {
@@ -86,12 +122,10 @@ const ContactUsManagement = () => {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-2 size-4" />
-              Edit
-            </Button>
-          </div>
+          <Button type="button" onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-2 size-4" />
+            Edit
+          </Button>
         </div>
 
         <CardContent className="p-5 sm:p-6">
@@ -130,6 +164,8 @@ const ContactUsManagement = () => {
         open={editOpen}
         onOpenChange={setEditOpen}
         contact={contact}
+        onSave={handleSave}
+        isSaving={updateSectionMutation.isPending}
       />
     </div>
   )

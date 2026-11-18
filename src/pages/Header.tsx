@@ -13,15 +13,17 @@ import {
 } from "@/components/ui/card"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
-import CURRENT_LOGO from "../assets/logo/logo.png"
 import DEFAULT_LOGO from "../assets/logo/choosePhoto.png"
 
 import { headerSchema, type HeaderFormValues } from "@/schemas/headerSchema"
-import { Input } from "@/components/ui/input"
 
-const REQUIRED_WIDTH = 300
-const REQUIRED_HEIGHT = 100
+import { useHeaderLogo } from "@/hooks/cms/useHeaderLogo"
+import { useUpdateHeaderLogo } from "@/hooks/cms/useUpdateHeaderLogo"
+
+const REQUIRED_WIDTH = 150
+const REQUIRED_HEIGHT = 50
 
 const Header = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -29,6 +31,16 @@ const Header = () => {
 
   const [previewLogo, setPreviewLogo] = useState<string | null>(null)
   const [fileName, setFileName] = useState("No file selected")
+
+  const {
+    data: headerSection,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useHeaderLogo()
+
+  const updateLogoMutation = useUpdateHeaderLogo()
 
   const {
     register,
@@ -49,7 +61,11 @@ const Header = () => {
 
   const selectedFile = watch("logoFile")
 
+  const isUploading = updateLogoMutation.isPending
+
   const displayedPreview = previewLogo ?? DEFAULT_LOGO
+
+  const currentLogo = headerSection?.imageUrl ?? DEFAULT_LOGO
 
   useEffect(() => {
     return () => {
@@ -59,6 +75,15 @@ const Header = () => {
     }
   }, [])
 
+  const clearPreview = () => {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current)
+      previewUrlRef.current = null
+    }
+
+    setPreviewLogo(null)
+  }
+
   const handleLogoChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -66,10 +91,7 @@ const Header = () => {
 
     if (!file) return
 
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current)
-      previewUrlRef.current = null
-    }
+    clearPreview()
 
     clearErrors("logoFile")
 
@@ -89,12 +111,8 @@ const Header = () => {
   }
 
   const handleCancel = () => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current)
-      previewUrlRef.current = null
-    }
+    clearPreview()
 
-    setPreviewLogo(null)
     setFileName("No file selected")
 
     reset({
@@ -103,6 +121,21 @@ const Header = () => {
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
+    }
+  }
+
+  const handleSaveLogo = async () => {
+    if (!selectedFile || !headerSection) return
+
+    try {
+      await updateLogoMutation.mutateAsync({
+        sectionId: headerSection.id,
+        logoFile: selectedFile,
+      })
+
+      handleCancel()
+    } catch (error) {
+      console.error("Logo upload failed:", error)
     }
   }
 
@@ -117,7 +150,7 @@ const Header = () => {
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Preview and validate your website logo.
+            Preview and update your website logo.
           </p>
         </div>
 
@@ -127,6 +160,20 @@ const Header = () => {
           <span className="text-muted-foreground">Logo Settings</span>
         </div>
       </div>
+
+      {isError && (
+        <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-destructive">
+            {error instanceof Error
+              ? error.message
+              : "Failed to load website logo."}
+          </p>
+
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <Card className="overflow-hidden">
@@ -172,7 +219,7 @@ const Header = () => {
             <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isValidating}
+              disabled={isValidating || isUploading || isLoading}
               className="group relative flex min-h-52 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed bg-muted/20 p-6 transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-70"
               aria-label="Choose a website logo"
             >
@@ -247,14 +294,33 @@ const Header = () => {
             </div>
 
             <div className="flex justify-end gap-1.5 border-t pt-5">
-              <Button type="button" variant="outline" onClick={handleCancel}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isUploading}
+              >
                 Clear Selection
               </Button>
+
               <Button
-                disabled={!selectedFile || !!errors.logoFile || isValidating}
                 type="button"
+                onClick={handleSaveLogo}
+                disabled={
+                  !selectedFile ||
+                  !!errors.logoFile ||
+                  isValidating ||
+                  isUploading ||
+                  isLoading ||
+                  isError ||
+                  !headerSection
+                }
               >
-                Save Logo
+                {isUploading && (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                )}
+
+                {isUploading ? "Uploading..." : "Save Logo"}
               </Button>
             </div>
           </CardContent>
@@ -275,11 +341,15 @@ const Header = () => {
             <div className="relative flex min-h-52 items-center justify-center overflow-hidden rounded-xl border bg-muted/20 p-6">
               <div className="absolute inset-0 bg-[radial-gradient(var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-60" />
 
-              <img
-                src={CURRENT_LOGO}
-                alt="Current website logo"
-                className="relative z-10 h-auto max-h-32 w-auto max-w-full object-contain"
-              />
+              {isLoading ? (
+                <LoaderCircle className="relative z-10 h-8 w-8 animate-spin text-primary" />
+              ) : (
+                <img
+                  src={currentLogo}
+                  alt="Current website logo"
+                  className="relative z-10 h-auto max-h-32 w-auto max-w-full object-contain"
+                />
+              )}
             </div>
           </CardContent>
         </Card>

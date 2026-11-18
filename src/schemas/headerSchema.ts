@@ -1,7 +1,7 @@
 import { z } from "zod"
 
-const REQUIRED_WIDTH = 300
-const REQUIRED_HEIGHT = 100
+const REQUIRED_WIDTH = 150
+const REQUIRED_HEIGHT = 50
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 const ACCEPTED_TYPES = [
