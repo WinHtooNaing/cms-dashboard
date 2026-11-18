@@ -16,31 +16,24 @@ export const carouselSchema = z
       .min(10, "Description must contain at least 10 characters.")
       .max(250, "Description cannot exceed 250 characters."),
 
-    image: z.custom<File>(
-      (value) => typeof File !== "undefined" && value instanceof File,
-      "Please upload a carousel image."
-    ).nullable(),
+    image: z
+      .custom<File>(
+        (value) => typeof File !== "undefined" && value instanceof File,
+        "Please upload a carousel image."
+      )
+      .nullable(),
 
     imageUrl: z.string(),
-
-    isActive: z.boolean(),
   })
-  .refine(
-    (data) => data.image !== null || data.imageUrl.trim() !== "",
-    {
-      message: "Carousel image is required.",
-      path: ["image"],
-    }
-  )
+  .refine((data) => data.image !== null || data.imageUrl.trim() !== "", {
+    message: "Carousel image is required.",
+    path: ["image"],
+  })
   .refine(
     (data) => {
       if (!data.image) return true
 
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp",
-      ]
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"]
 
       return allowedTypes.includes(data.image.type)
     },
@@ -61,6 +54,4 @@ export const carouselSchema = z
     }
   )
 
-export type CarouselSchemaValues = z.infer<
-  typeof carouselSchema
->
+export type CarouselSchemaValues = z.infer<typeof carouselSchema>

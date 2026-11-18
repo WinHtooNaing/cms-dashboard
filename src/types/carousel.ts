@@ -1,15 +1,35 @@
-export interface Carousel {
-  id: number
+export interface CarouselContent {
   title: string
   description: string
-  image: string
-  isActive: boolean
+  imageUrl: string
+  imagePublicId?: string
 }
 
-export interface CarouselFormValues {
+export interface CarouselApiItem {
+  id: string
+  sectionId: string
+  position: number
+  content: CarouselContent
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Carousel {
+  id: string
+  sectionId: string
+  position: number
   title: string
   description: string
-  image: File | null
   imageUrl: string
-  isActive: boolean
+  imagePublicId?: string
+}
+
+export interface CarouselResponseProps {
+  success: boolean
+  data: CarouselApiItem[]
+}
+
+export interface CarouselItemResponse {
+  success: boolean
+  data: CarouselApiItem
 }

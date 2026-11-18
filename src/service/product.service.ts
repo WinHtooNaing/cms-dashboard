@@ -6,9 +6,7 @@ import type {
   ProductQueryParams,
 } from "@/types/product"
 
-export async function getProducts(
-  params: ProductQueryParams = {},
-) {
+export async function getProducts(params: ProductQueryParams = {}) {
   const response = await api.get("/products", {
     params,
   })
@@ -19,7 +17,6 @@ export const getProductById = async (id: string): Promise<Product> => {
   const response = await api.get(`/products/${id}`)
   return response.data.data
 }
-
 
 export type CreateProductPayload = {
   name: string
@@ -44,9 +41,9 @@ export const createProduct = async (data: CreateProductPayload) => {
   formData.append("price", String(data.price))
   formData.append("categoryId", data.categoryId)
 
-if (data.originalPrice !== undefined) {
-  formData.append("originalPrice", String(data.originalPrice))
-}
+  if (data.originalPrice !== undefined) {
+    formData.append("originalPrice", String(data.originalPrice))
+  }
 
   if (data.image) {
     formData.append("image", data.image)
@@ -70,10 +67,7 @@ export type UpdateProductPayload = {
   image?: File
 }
 
-export const updateProduct = async (
-  id: string,
-  data: UpdateProductPayload
-) => {
+export const updateProduct = async (id: string, data: UpdateProductPayload) => {
   const formData = new FormData()
 
   formData.append("name", data.name)
@@ -105,10 +99,9 @@ export const initializeProductStock = async (
   productId: string,
   quantity: number
 ) => {
-  const response = await api.post(
-    `/stock/products/${productId}/initialize`,
-    { quantity }
-  )
+  const response = await api.post(`/stock/products/${productId}/initialize`, {
+    quantity,
+  })
   return response.data.data
 }
 

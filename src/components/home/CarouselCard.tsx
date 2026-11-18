@@ -3,7 +3,6 @@ import { Eye, Pencil, Trash2, ImageIcon } from "lucide-react"
 import type { Carousel } from "@/types/carousel"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 
 interface CarouselCardProps {
@@ -23,17 +22,10 @@ const CarouselCard = ({
     <Card className="gap-0 overflow-hidden py-0">
       <div className="relative aspect-video overflow-hidden bg-muted">
         <img
-          src={carousel.image}
+          src={carousel.imageUrl}
           alt={carousel.title}
           className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
         />
-
-        <Badge
-          className="absolute top-3 left-3"
-          variant={carousel.isActive ? "default" : "secondary"}
-        >
-          {carousel.isActive ? "Active" : "Inactive"}
-        </Badge>
 
         <div className="absolute top-3 right-3 rounded-md bg-background/90 p-2">
           <ImageIcon className="size-4 text-muted-foreground" />
