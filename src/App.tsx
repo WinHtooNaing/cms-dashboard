@@ -24,7 +24,6 @@ import WhyChooseUs from "./pages/about/WhyChooseUs"
 import Products from "./pages/products/Products"
 import ProductView from "./components/products/ProductView"
 
-import Settings from "./pages/auth/Settings"
 import Order from "./pages/order/Orders"
 
 import { GuestRoute } from "./components/auth/GuestRoute"
@@ -35,6 +34,7 @@ import UserManagement from "./pages/user/Users"
 import RolesPage from "./pages/role/Roles"
 import BrandPage from "./pages/brand/Brand"
 import CategoryPage from "./pages/category/Category"
+import ProfilePage from "./pages/profile/Profile"
 
 const router = createBrowserRouter([
   {
@@ -177,8 +177,8 @@ const router = createBrowserRouter([
           },
 
           {
-            path: "settings",
-            element: <Settings />,
+            path: "profile",
+            element: <ProfilePage />,
           },
         ],
       },

@@ -13,7 +13,7 @@ import {
 } from "@/service/new-collection.service"
 import type { Product } from "@/types/product"
 
-const NEW_COLLECTION_SECTION_ID = "590fc0c0-6785-45d1-9312-f9d681b8480c"
+const NEW_COLLECTION_SECTION_ID = import.meta.env.VITE_COLLECTION
 
 const getProductIdFromItem = (item: NewCollectionItem): string | null => {
   const content = item.content
@@ -85,7 +85,9 @@ const NewCollection = () => {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to add to new collection"
+        error instanceof Error
+          ? error.message
+          : "Failed to add to new collection"
       )
     },
   })

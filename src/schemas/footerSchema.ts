@@ -70,48 +70,6 @@ export type SupportLinksValues = z.infer<
 
 
 
-
-export const footerContactSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, "Email address is required.")
-    .email("Please enter a valid email address.")
-    .max(254, "Email address is too long."),
-
-  phone: z
-    .string()
-    .trim()
-    .min(1, "Phone number is required.")
-    .regex(
-      /^\+?[0-9][0-9\s().-]*$/,
-      "Enter a valid phone number.",
-    )
-    .refine(
-      (value) => {
-        const digitCount = value.replace(/\D/g, "").length
-
-        return digitCount >= 7 && digitCount <= 15
-      },
-      {
-        message: "Phone number must contain 7–15 digits.",
-      },
-    ),
-
-  address: z
-    .string()
-    .trim()
-    .min(3, "Address must contain at least 3 characters.")
-    .max(150, "Address cannot exceed 150 characters."),
-})
-
-export type FooterContactValues = z.infer<
-  typeof footerContactSchema
->
-
-
-
-
 export const socialLinkSchema = z.object({
   id: z.number(),
 

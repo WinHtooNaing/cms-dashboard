@@ -12,7 +12,7 @@ import type {
   SocialLinksValues,
 } from "@/schemas/footerSchema"
 
-export type FooterViewType = "description" | "support" | "contact" | "social"
+export type FooterViewType = "description" | "support" | "social"
 
 export type FooterViewItem =
   | SupportLinksValues["supportLinks"][number]
@@ -42,7 +42,7 @@ const FooterViewDialog = ({
   const titles: Record<FooterViewType, string> = {
     description: "Footer Description",
     support: "Support Link Details",
-    contact: "Contact Information",
+
     social: "Social Media Details",
   }
 

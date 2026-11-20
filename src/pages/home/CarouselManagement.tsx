@@ -17,7 +17,7 @@ import {
 import type { Carousel } from "@/types/carousel"
 import type { CarouselSchemaValues } from "@/schemas/carouselSchema"
 
-const sectionId = "51f6ac36-14e0-448e-894c-448f6d579934"
+const sectionId = import.meta.env.VITE_IMAGE_CAROUSEL
 const queryKey = ["carousels", sectionId]
 
 const createRandomPosition = (items: Carousel[]) => {

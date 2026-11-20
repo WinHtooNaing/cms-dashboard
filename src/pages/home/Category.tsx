@@ -12,7 +12,7 @@ import {
 } from "@/service/cms.category.service"
 import { getCategories } from "@/service/category.service"
 
-const CATEGORY_SECTION_ID = "2bb344e4-eeb4-4701-b081-6edc4d6cd172"
+const CATEGORY_SECTION_ID = import.meta.env.VITE_CATEGORY
 
 const getCategoryIdFromItem = (item: CmsCategoryItem): string | null => {
   const { content } = item
@@ -82,7 +82,9 @@ const Category = () => {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to add home page category"
+        error instanceof Error
+          ? error.message
+          : "Failed to add home page category"
       )
     },
   })
