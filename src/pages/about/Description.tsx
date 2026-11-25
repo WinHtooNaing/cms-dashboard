@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FileText, Pencil } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import DescriptionSkeleton from "@/components/skeletons/DescriptionSkeleton"
 
 const emptyValues: IntroductionFormValues = {
   badge: "",
@@ -130,11 +130,7 @@ const Description = () => {
       />
 
       {isLoading ? (
-        <Card className="p-6">
-          <p className="text-sm text-muted-foreground">
-            Loading description content...
-          </p>
-        </Card>
+        <DescriptionSkeleton />
       ) : hasError ? (
         <Card className="p-6">
           <p className="text-sm text-destructive">

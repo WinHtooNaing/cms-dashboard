@@ -11,6 +11,7 @@ import GetInTouchFormDialog from "@/components/contactUs/GetInTouchFormDialog"
 
 import { useContactSection } from "@/hooks/cms/useContactSection"
 import { useUpdateSection } from "@/hooks/cms/useUpdateSection"
+import ContactUsSkeleton from "@/components/skeletons/ContactUsSkeleton"
 
 const ContactUsManagement = () => {
   const [editOpen, setEditOpen] = useState(false)
@@ -35,13 +36,7 @@ const ContactUsManagement = () => {
   }
 
   if (isLoading) {
-    return (
-      <div className="space-y-6 pt-6">
-        <div className="h-8 w-64 animate-pulse rounded-md bg-muted" />
-
-        <div className="h-64 animate-pulse rounded-xl bg-muted" />
-      </div>
-    )
+    return <ContactUsSkeleton />
   }
 
   if (isError) {

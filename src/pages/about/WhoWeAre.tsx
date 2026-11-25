@@ -41,6 +41,7 @@ import {
   type featureContentFormValues,
 } from "@/schemas/aboutSchema"
 import { ABOUT_SECTION_KEYS } from "@/constants/cms"
+import WhoWeAreSkeleton from "@/components/skeletons/WhoWeAreSkeleton"
 
 type Feature = featureContentFormValues & {
   id: string
@@ -219,23 +220,8 @@ const WhoWeArePage = () => {
       title: "",
     })
   }
-
   if (sectionLoading || itemsLoading) {
-    return (
-      <div className="space-y-8 pt-4 sm:pt-6">
-        <AboutPageHeader
-          icon={FileText}
-          title="Who We Are Management"
-          description="Manage the Who We Are section and its features displayed on the Tech Haven About Us page."
-        />
-
-        <Card>
-          <CardContent className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-            Loading Who We Are content...
-          </CardContent>
-        </Card>
-      </div>
-    )
+    return <WhoWeAreSkeleton />
   }
 
   if (sectionError || itemsError) {
