@@ -28,6 +28,7 @@ import type { OrderStatus } from "@/types/order"
 
 import { columns, type OrderTableRow } from "./column"
 import { features } from "./data-table-features"
+import OrderTableSkeleton from "../skeletons/OrderTableSkeleton"
 
 const PAGE_SIZE = 10
 const EMPTY_ORDERS: OrderTableRow[] = []
@@ -85,7 +86,9 @@ const parseOrderPage = (response: unknown, requestedPage: number) => {
 
   const items = rawItems.map((item, index): OrderTableRow => {
     if (!isRecord(item)) {
-      throw new Error(`The orders API returned an invalid order at row ${index + 1}.`)
+      throw new Error(
+        `The orders API returned an invalid order at row ${index + 1}.`
+      )
     }
 
     const id = typeof item.id === "string" ? item.id : undefined
@@ -93,7 +96,9 @@ const parseOrderPage = (response: unknown, requestedPage: number) => {
       typeof item.orderNumber === "string" ? item.orderNumber : id
     const shippingName =
       typeof item.shippingName === "string" ? item.shippingName : undefined
-    const status = (typeof item.status === "string" ? item.status : undefined) as OrderStatus | undefined
+    const status = (
+      typeof item.status === "string" ? item.status : undefined
+    ) as OrderStatus | undefined
     const totalAmount = toFiniteNumber(item.totalAmount)
     const createdAt =
       typeof item.createdAt === "string"
@@ -232,18 +237,16 @@ const OrderDataTable = () => {
           </TableHeader>
           <TableBody>
             {isPending ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Loading orders...
-                </TableCell>
-              </TableRow>
+              <OrderTableSkeleton columnCount={columns.length} rowCount={5} />
             ) : isError ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center text-destructive"
                 >
-                  {error instanceof Error ? error.message : "Failed to load orders."}
+                  {error instanceof Error
+                    ? error.message
+                    : "Failed to load orders."}
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length > 0 ? (
@@ -258,7 +261,10 @@ const OrderDataTable = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No orders found.
                 </TableCell>
               </TableRow>
