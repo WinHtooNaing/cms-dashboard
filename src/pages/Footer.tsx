@@ -95,6 +95,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { getApiErrorMessage } from "@/lib/api-error"
+import FooterManagementSkeleton from "@/components/footer/FooterManagementSkeleton"
 type SupportDestinationType = "internal" | "external"
 type SupportLink = {
   id: string
@@ -381,29 +382,8 @@ const FooterManagement = () => {
   const getNextPosition = (items: { position: number }[]) => {
     return Math.max(0, ...items.map((item) => item.position)) + 1
   }
-  // Loading state
   if (isLoading) {
-    return (
-      <div className="space-y-6 pt-4 sm:pt-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Footer Management
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Loading footer configuration...
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="h-28 animate-pulse rounded-xl bg-muted"
-            />
-          ))}
-        </div>
-      </div>
-    )
+    return <FooterManagementSkeleton />
   }
 
   if (isError) {
