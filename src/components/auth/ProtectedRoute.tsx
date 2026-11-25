@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser"
 export function ProtectedRoute() {
   const hasRefreshToken = Boolean(localStorage.getItem("refreshToken"))
 
-  const { data, isPending } = useCurrentUser()
+  const { data, isPending, isError } = useCurrentUser()
 
   if (!hasRefreshToken) {
     return <Navigate to="/login" replace />
@@ -18,7 +18,11 @@ export function ProtectedRoute() {
     )
   }
 
-  if (!data?.user.isActive) {
+  if (isError || !data?.user?.isActive) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (data.user.role === "CUSTOMER") {
     return <Navigate to="/login" replace />
   }
 

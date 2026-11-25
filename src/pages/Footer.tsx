@@ -8,13 +8,31 @@ import {
   Pencil,
   Trash2,
   Plus,
-  ArrowUp,
-  ArrowDown,
+  GripVertical,
   Globe,
   Link as LinkIcon,
   CheckCircle2,
 } from "lucide-react"
 import { toast } from "sonner"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+
+import {
+  SortableContext,
+  useSortable,
+  arrayMove,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable"
+
+import { CSS } from "@dnd-kit/utilities"
 import {
   useFooter,
   useUpdateFooterDescription,
@@ -280,7 +298,7 @@ const FooterManagement = () => {
             setSelectedSocial(null)
           },
           onError: (error) => {
-            toast.error(getApiErrorMessage (error))
+            toast.error(getApiErrorMessage(error))
           },
         }
       )
@@ -320,29 +338,13 @@ const FooterManagement = () => {
     })
   }
 
-  const moveItem = (
-    items: { id: string }[],
-    section: FooterSection | undefined,
-    index: number,
-    direction: "up" | "down"
-  ) => {
+  const handleReorder = (section: FooterSection | undefined, ids: string[]) => {
     if (!section) return
-
-    const newIndex = direction === "up" ? index - 1 : index + 1
-
-    if (newIndex < 0 || newIndex >= items.length) return
-
-    const updatedItems = [...items]
-
-    ;[updatedItems[index], updatedItems[newIndex]] = [
-      updatedItems[newIndex],
-      updatedItems[index],
-    ]
 
     reorderItemsMutation.mutate(
       {
         sectionId: section.id,
-        ids: updatedItems.map((item) => item.id),
+        ids,
       },
       {
         onSuccess: () => {
@@ -555,9 +557,7 @@ const FooterManagement = () => {
                 }}
                 onEdit={openSupportDialog}
                 onDelete={(id) => openDeleteDialog("support", id)}
-                onMove={(index, direction) =>
-                  moveItem(supportLinks, supportSection, index, direction)
-                }
+                onReorder={(ids) => handleReorder(supportSection, ids)}
               />
             </CardContent>
 
@@ -602,9 +602,7 @@ const FooterManagement = () => {
                 }}
                 onEdit={openSocialDialog}
                 onDelete={(id) => openDeleteDialog("social", id)}
-                onMove={(index, direction) =>
-                  moveItem(socialLinks, socialSection, index, direction)
-                }
+                onReorder={(ids) => handleReorder(socialSection, ids)}
               />
             </CardContent>
 
@@ -745,7 +743,7 @@ type SupportLinksTableProps = {
   onView: (item: SupportLink) => void
   onEdit: (item: SupportLink) => void
   onDelete: (id: string) => void
-  onMove: (index: number, direction: "up" | "down") => void
+  onReorder: (ids: string[]) => void
 }
 
 const SupportLinksTable = ({
@@ -753,104 +751,75 @@ const SupportLinksTable = ({
   onView,
   onEdit,
   onDelete,
-  onMove,
+  onReorder,
 }: SupportLinksTableProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (!over || active.id === over.id) return
+
+    const oldIndex = links.findIndex((item) => item.id === active.id)
+    const newIndex = links.findIndex((item) => item.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reorderedItems = arrayMove(links, oldIndex, newIndex)
+
+    onReorder(reorderedItems.map((item) => item.id))
+  }
+
   return (
     <div className="w-full overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="w-16">No.</TableHead>
-            <TableHead>Link Name</TableHead>
-            <TableHead>Destination</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-16">No.</TableHead>
+              <TableHead>Link Name</TableHead>
+              <TableHead>Destination</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {links.length === 0 ? (
-            <EmptyTableRow message="No support links found." />
-          ) : (
-            links.map((link, index) => (
-              <TableRow key={link.id}>
-                <TableCell className="text-muted-foreground">
-                  {index + 1}
-                </TableCell>
-
-                <TableCell className="font-medium">{link.name}</TableCell>
-
-                <TableCell>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    {link.destinationType === "internal" ? (
-                      <LinkIcon className="size-4 shrink-0" />
-                    ) : (
-                      <Globe className="size-4 shrink-0" />
-                    )}
-
-                    {link.destinationType === "internal"
-                      ? (INTERNAL_PAGES.find(
-                          (page) => page.value === link.pageKey
-                        )?.label ?? "Unknown page")
-                      : "External URL"}
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onMove(index, "up")}
-                      disabled={index === 0}
-                      title="Move up"
-                    >
-                      <ArrowUp className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onMove(index, "down")}
-                      disabled={index === links.length - 1}
-                      title="Move down"
-                    >
-                      <ArrowDown className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onView(link)}
-                      title="View"
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(link)}
-                      title="Edit"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => onDelete(link.id)}
-                      title="Delete"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+          <SortableContext
+            items={links.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <TableBody>
+              {links.length === 0 ? (
+                <EmptyTableRow message="No support links found." />
+              ) : (
+                links.map((link, index) => (
+                  <SortableSupportRow
+                    key={link.id}
+                    link={link}
+                    index={index}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))
+              )}
+            </TableBody>
+          </SortableContext>
+        </Table>
+      </DndContext>
     </div>
   )
 }
@@ -859,7 +828,7 @@ type SocialLinksTableProps = {
   onView: (item: SocialLink) => void
   onEdit: (item: SocialLink) => void
   onDelete: (id: string) => void
-  onMove: (index: number, direction: "up" | "down") => void
+  onReorder: (ids: string[]) => void
 }
 
 const SocialLinksTable = ({
@@ -867,99 +836,75 @@ const SocialLinksTable = ({
   onView,
   onEdit,
   onDelete,
-  onMove,
+  onReorder,
 }: SocialLinksTableProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (!over || active.id === over.id) return
+
+    const oldIndex = links.findIndex((item) => item.id === active.id)
+    const newIndex = links.findIndex((item) => item.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reorderedItems = arrayMove(links, oldIndex, newIndex)
+
+    onReorder(reorderedItems.map((item) => item.id))
+  }
+
   return (
     <div className="w-full overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="w-16">No.</TableHead>
-            <TableHead>Platform</TableHead>
-            <TableHead>Profile URL</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40">
+              <TableHead className="w-12"></TableHead>
+              <TableHead className="w-16">No.</TableHead>
+              <TableHead>Platform</TableHead>
+              <TableHead>Profile URL</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>
-          {links.length === 0 ? (
-            <EmptyTableRow message="No social media profiles found." />
-          ) : (
-            links.map((link, index) => (
-              <TableRow key={link.id}>
-                <TableCell className="text-muted-foreground">
-                  {index + 1}
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex items-center gap-2 font-medium capitalize">
-                    <Share2 className="size-4 text-muted-foreground" />
-                    {link.platform}
-                  </div>
-                </TableCell>
-
-                <TableCell>
-                  <span className="block max-w-xs truncate text-sm text-muted-foreground">
-                    {link.url}
-                  </span>
-                </TableCell>
-
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onMove(index, "up")}
-                      disabled={index === 0}
-                      title="Move up"
-                    >
-                      <ArrowUp className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onMove(index, "down")}
-                      disabled={index === links.length - 1}
-                      title="Move down"
-                    >
-                      <ArrowDown className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onView(link)}
-                      title="View"
-                    >
-                      <Eye className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(link)}
-                      title="Edit"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => onDelete(link.id)}
-                      title="Delete"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+          <SortableContext
+            items={links.map((item) => item.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <TableBody>
+              {links.length === 0 ? (
+                <EmptyTableRow message="No social media profiles found." />
+              ) : (
+                links.map((link, index) => (
+                  <SortableSocialRow
+                    key={link.id}
+                    link={link}
+                    index={index}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                  />
+                ))
+              )}
+            </TableBody>
+          </SortableContext>
+        </Table>
+      </DndContext>
     </div>
   )
 }
@@ -1457,6 +1402,207 @@ const ReadOnlyField = ({ label, value }: { label: string; value: string }) => {
         </p>
       </div>
     </div>
+  )
+}
+
+type SortableSupportRowProps = {
+  link: SupportLink
+  index: number
+  onView: (item: SupportLink) => void
+  onEdit: (item: SupportLink) => void
+  onDelete: (id: string) => void
+}
+
+const SortableSupportRow = ({
+  link,
+  index,
+  onView,
+  onEdit,
+  onDelete,
+}: SortableSupportRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: "relative" as const,
+    zIndex: isDragging ? 1 : 0,
+  }
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell>
+        <Button
+          ref={setActivatorNodeRef}
+          variant="ghost"
+          size="icon"
+          className="cursor-grab touch-none active:cursor-grabbing"
+          aria-label={`Drag ${link.name} to reorder`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4 text-muted-foreground" />
+        </Button>
+      </TableCell>
+
+      <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+
+      <TableCell className="font-medium">{link.name}</TableCell>
+
+      <TableCell>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {link.destinationType === "internal" ? (
+            <LinkIcon className="size-4 shrink-0" />
+          ) : (
+            <Globe className="size-4 shrink-0" />
+          )}
+
+          {link.destinationType === "internal"
+            ? (INTERNAL_PAGES.find((page) => page.value === link.pageKey)
+                ?.label ?? "Unknown page")
+            : "External URL"}
+        </div>
+      </TableCell>
+
+      <TableCell>
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onView(link)}
+            title="View"
+          >
+            <Eye className="size-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(link)}
+            title="Edit"
+          >
+            <Pencil className="size-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(link.id)}
+            title="Delete"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+}
+type SortableSocialRowProps = {
+  link: SocialLink
+  index: number
+  onView: (item: SocialLink) => void
+  onEdit: (item: SocialLink) => void
+  onDelete: (id: string) => void
+}
+
+const SortableSocialRow = ({
+  link,
+  index,
+  onView,
+  onEdit,
+  onDelete,
+}: SortableSocialRowProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: "relative" as const,
+    zIndex: isDragging ? 1 : 0,
+  }
+
+  return (
+    <TableRow ref={setNodeRef} style={style}>
+      <TableCell>
+        <Button
+          ref={setActivatorNodeRef}
+          variant="ghost"
+          size="icon"
+          className="cursor-grab touch-none active:cursor-grabbing"
+          aria-label={`Drag ${link.platform} to reorder`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4 text-muted-foreground" />
+        </Button>
+      </TableCell>
+
+      <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+
+      <TableCell>
+        <div className="flex items-center gap-2 font-medium capitalize">
+          <Share2 className="size-4 text-muted-foreground" />
+          {link.platform}
+        </div>
+      </TableCell>
+
+      <TableCell>
+        <span className="block max-w-xs truncate text-sm text-muted-foreground">
+          {link.url}
+        </span>
+      </TableCell>
+
+      <TableCell>
+        <div className="flex justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onView(link)}
+            title="View"
+          >
+            <Eye className="size-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(link)}
+            title="Edit"
+          >
+            <Pencil className="size-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={() => onDelete(link.id)}
+            title="Delete"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   )
 }
 

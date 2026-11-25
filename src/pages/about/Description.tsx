@@ -113,7 +113,7 @@ const Description = () => {
 
       setOpen(false)
     } catch (error) {
-      console.error("Failed to update introduction:", error)
+      console.error("Failed to update description:", error)
     }
   }
 
@@ -125,20 +125,20 @@ const Description = () => {
     <div className="space-y-8 pt-4 sm:pt-6">
       <AboutPageHeader
         icon={FileText}
-        title="Introduction Management"
+        title="Description Management"
         description="Manage the main heading and introductory description displayed on your About Us page."
       />
 
       {isLoading ? (
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
-            Loading introduction content...
+            Loading description content...
           </p>
         </Card>
       ) : hasError ? (
         <Card className="p-6">
           <p className="text-sm text-destructive">
-            Failed to load introduction content. Please try again.
+            Failed to load description content. Please try again.
           </p>
         </Card>
       ) : !aboutDocument ? (
@@ -151,7 +151,7 @@ const Description = () => {
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
             Introduction section was not found. Please ask the backend developer
-            to create the introduction section.
+            to create the description section.
           </p>
         </Card>
       ) : (
@@ -290,7 +290,7 @@ const Description = () => {
                 <Textarea
                   id="intro-description"
                   rows={5}
-                  placeholder="Write the About Us introduction..."
+                  placeholder="Write the About Us description..."
                   {...register("description")}
                   aria-invalid={!!errors.description}
                   className="resize-y"

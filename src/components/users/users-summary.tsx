@@ -27,19 +27,19 @@ export function UsersSummary({ totalUsers, users }: UsersSummaryProps) {
       />
 
       <SummaryCard
-        title="Administrators (Current Page)"
+        title="Administrators"
         value={adminCount}
         icon={<ShieldCheck className="size-5" />}
       />
 
       <SummaryCard
-        title="Staff (Current Page)"
+        title="Staff"
         value={staffCount}
         icon={<UserCog className="size-5" />}
       />
 
       <SummaryCard
-        title="Customers (Current Page)"
+        title="Customers"
         value={customerCount}
         icon={<UserRound className="size-5" />}
       />

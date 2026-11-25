@@ -35,13 +35,12 @@ export const loginUser = async (
     payload
   )
 
-  const loginData = response.data.data
-
-  localStorage.setItem("accessToken", loginData.accessToken)
-  localStorage.setItem("refreshToken", loginData.refreshToken)
-  localStorage.setItem("user", JSON.stringify(loginData.user))
-
-  return loginData
+  return response.data.data
+}
+export const storeAuthSession = (data: LoginResponse) => {
+  localStorage.setItem("accessToken", data.accessToken)
+  localStorage.setItem("refreshToken", data.refreshToken)
+  localStorage.setItem("user", JSON.stringify(data.user))
 }
 
 export const fetchCurrentUser = async (): Promise<CurrentUserResponse> => {

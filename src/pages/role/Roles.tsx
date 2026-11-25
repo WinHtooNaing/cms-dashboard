@@ -244,7 +244,10 @@ export default function RolesPage() {
   const handleOpenPermissions = (role: Role) => {
     setSelectedRole(role)
 
-    setSelectedPermissionIds(permissions.map((permission) => permission.id))
+    setSelectedPermissionIds(
+      role.permissions.map((permission) => permission.id)
+    )
+
     setPermissionDialogOpen(true)
   }
 
@@ -254,7 +257,6 @@ export default function RolesPage() {
     setSelectedPermissionIds((previous) => {
       const isSelected = previous.includes(permission.id)
 
-      // If Read is being unchecked, remove all dependent permissions.
       if (permission.code.endsWith(":read") && isSelected) {
         const resource = permission.code.split(":")[0]
 
@@ -273,7 +275,6 @@ export default function RolesPage() {
         )
       }
 
-      // Prevent selecting another permission without its Read permission.
       if (readPermission && !previous.includes(readPermission.id)) {
         return previous
       }

@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import * as z from "zod"
 import { loginSchema } from "@/schemas/loginSchema"
-import { loginUser } from "@/service/auth.service"
+import { loginUser, storeAuthSession } from "@/service/auth.service"
 import { useQueryClient } from "@tanstack/react-query"
 import { currentUserQueryKey } from "@/hooks/useCurrentUser"
 export function LoginForm() {
@@ -39,13 +39,28 @@ export function LoginForm() {
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     try {
       const response = await loginUser(data)
+
+      if (response.user.role === "CUSTOMER") {
+        toast.error("Access Denied", {
+          description:
+            "Your account does not have permission to access the admin dashboard.",
+        })
+
+        return
+      }
+
+      storeAuthSession(response)
+
       queryClient.setQueryData(currentUserQueryKey, {
         user: response.user,
         permissions: response.permissions,
       })
-      toast.success("Login successful!")
 
-      navigate("/home", { replace: true })
+      toast.success("Login successful!", {
+        description: `Welcome back, ${response.user.name}!`,
+      })
+
+      navigate("/products", { replace: true })
     } catch (error) {
       toast.error(getApiErrorMessage(error))
     }

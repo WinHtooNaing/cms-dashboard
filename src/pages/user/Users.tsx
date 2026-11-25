@@ -1,7 +1,10 @@
 import { useState } from "react"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { UserPlus } from "lucide-react"
 
+import { CreateUserDialog } from "@/components/users/create-user-dialog"
+import type { CreateUserFormValues } from "@/schemas/userSchema"
 import { toast } from "sonner"
 
 import { Link } from "react-router-dom"
@@ -10,7 +13,7 @@ import { Shield } from "lucide-react"
 
 import type { User } from "@/types/user"
 
-import { getUsers, assignUserRole } from "@/service/user.service"
+import { getUsers, assignUserRole, createUser } from "@/service/user.service"
 import { getRoles } from "@/service/role.service"
 
 import { usePermissions } from "@/hooks/usePermissions"
@@ -22,27 +25,43 @@ import { UsersToolbar } from "@/components/users/users-toolbar"
 import { UsersTable } from "@/components/users/users-table"
 import { UserDetailsDialog } from "@/components/users/user-details-dialog"
 import { AssignRoleDialog } from "@/components/users/assign-role-dialog"
+import { Button } from "@/components/ui/button"
 
 export default function UsersPage() {
   const queryClient = useQueryClient()
-
   const { hasPermission } = usePermissions()
-
   const canManageRoles = hasPermission("role:manage")
-
+  const canCreateUser = hasPermission("user:manage")
+  const [createOpen, setCreateOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("ALL")
   const [page, setPage] = useState(1)
-
   const limit = 8
-
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   const [viewOpen, setViewOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
 
   const [newRole, setNewRole] = useState("")
+  const createUserMutation = useMutation({
+    mutationFn: createUser,
 
+    onSuccess: () => {
+      toast.success("User created successfully")
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      })
+
+      setPage(1)
+    },
+
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Failed to create user"
+
+      toast.error(message)
+    },
+  })
   const {
     data: usersData,
     isPending,
@@ -123,7 +142,6 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Page heading */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
@@ -133,15 +151,23 @@ export default function UsersPage() {
           </p>
         </div>
 
-        {canManageRoles && (
-          <Link
-            to="/roles"
-            className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-          >
-            <Shield className="mr-2 size-4" />
-            Manage Roles
-          </Link>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {canManageRoles && (
+            <Link to="/roles">
+              <Button variant="outline">
+                <Shield className="mr-2 size-4" />
+                Manage Roles
+              </Button>
+            </Link>
+          )}
+
+          {canCreateUser && (
+            <Button onClick={() => setCreateOpen(true)}>
+              <UserPlus className="mr-2 size-4" />
+              Add User
+            </Button>
+          )}
+        </div>
       </div>
 
       <UsersSummary totalUsers={pagination?.total ?? 0} users={users} />
@@ -200,6 +226,15 @@ export default function UsersPage() {
         onOpenChange={setAssignOpen}
         onRoleChange={setNewRole}
         onSave={handleAssignRole}
+      />
+      <CreateUserDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSubmit={async (values: CreateUserFormValues) => {
+          const { confirmPassword, ...payload } = values
+
+          await createUserMutation.mutateAsync(payload)
+        }}
       />
     </div>
   )
