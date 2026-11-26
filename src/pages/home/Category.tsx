@@ -1,193 +1,184 @@
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ImagePlus, Pencil, Plus, Trash2 } from "lucide-react"
+import { useCallback, useMemo } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
-type CategoryItem = {
-  id: number
-  name: string
-  image: string
+import { getCmsCategoryColumns } from "@/components/home/category/columns"
+import { DataTable } from "@/components/home/category/data-table"
+import {
+  addCmsCategory,
+  deleteCmsCategoryItem,
+  getCmsCategory,
+  type CmsCategoryItem,
+} from "@/service/cms.category.service"
+import { getCategories } from "@/service/category.service"
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import CmsCategoryTableSkeleton from "@/components/skeletons/CmsCategoryTableSkeleton"
+
+const CATEGORY_SECTION_ID = import.meta.env.VITE_CATEGORY
+
+const getCategoryIdFromItem = (item: CmsCategoryItem): string | null => {
+  const { content } = item
+  if (!content) return null
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content) as { category?: string }
+      return parsed.category ?? null
+    } catch {
+      return null
+    }
+  }
+  return content.category ?? null
 }
 
-const initialCategories: CategoryItem[] = [
-  {
-    id: 1,
-    name: "Iphone",
-    image:
-      "https://www.apple.com/v/iphone-duo/d/images/overview/highlights/display__bx48n0ntsgvm_large_2x.jpg",
-  },
-  {
-    id: 2,
-    name: "Macbook",
-    image:
-      "https://anycallmobilemm.com/wp-content/uploads/2026/05/Macbook-Air-15-M5-Cover.webp",
-  },
-  {
-    id: 3,
-    name: "Huawei",
-    image:
-      "https://anycallmobilemm.com/wp-content/uploads/2026/02/Huawei-Mate-X7-Cover.webp",
-  },
-]
+const Category = () => {
+  const queryClient = useQueryClient()
 
-export default function Category() {
-  const categories = initialCategories
+  const {
+    data: categories = [],
+    isPending: isCategoriesPending,
+    isError: isCategoriesError,
+  } = useQuery({
+    queryKey: ["cms-category-options"],
+    queryFn: getCategories,
+  })
+
+  const {
+    data: categoryData,
+    isPending: isItemsPending,
+    isError: isItemsError,
+  } = useQuery({
+    queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+    queryFn: () => getCmsCategory(CATEGORY_SECTION_ID),
+  })
+
+  const items = useMemo(() => categoryData?.data ?? [], [categoryData])
+  const itemByCategoryId = useMemo(() => {
+    const map = new Map<string, CmsCategoryItem>()
+    for (const item of items) {
+      const categoryId = getCategoryIdFromItem(item)
+      if (categoryId) map.set(categoryId, item)
+    }
+    return map
+  }, [items])
+  const selectedCategoryIds = useMemo(
+    () => new Set(itemByCategoryId.keys()),
+    [itemByCategoryId]
+  )
+
+  const addMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const maxPosition = items.reduce(
+        (max, item) => Math.max(max, Number(item.position) || 0),
+        0
+      )
+      const formData = new FormData()
+      formData.append("position", String(maxPosition + 1))
+      formData.append("content", JSON.stringify({ category: categoryId }))
+      return addCmsCategory(CATEGORY_SECTION_ID, formData)
+    },
+    onSuccess: () => {
+      toast.success("Home page categories updated")
+      queryClient.invalidateQueries({
+        queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to add home page category"
+      )
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async (categoryId: string) => {
+      const item = itemByCategoryId.get(categoryId)
+      if (!item) throw new Error("Home page category item not found.")
+      return deleteCmsCategoryItem(item.id)
+    },
+    onSuccess: () => {
+      toast.success("Home page categories updated")
+      queryClient.invalidateQueries({
+        queryKey: ["cms-category-items", CATEGORY_SECTION_ID],
+      })
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove home page category"
+      )
+    },
+  })
+
+  const isBusy = addMutation.isPending || removeMutation.isPending
+  const handleToggle = useCallback(
+    (categoryId: string, checked: boolean) => {
+      if (checked) {
+        if (itemByCategoryId.has(categoryId)) return
+        addMutation.mutate(categoryId)
+      } else {
+        if (!itemByCategoryId.has(categoryId)) return
+        removeMutation.mutate(categoryId)
+      }
+    },
+    [itemByCategoryId, addMutation, removeMutation]
+  )
+
+  const columns = useMemo(
+    () => getCmsCategoryColumns(selectedCategoryIds, handleToggle, isBusy),
+    [selectedCategoryIds, handleToggle, isBusy]
+  )
+
+  const isPending = isCategoriesPending || isItemsPending
+  const hasError = isCategoriesError || isItemsError
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-8 pt-4 sm:pt-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="mb-1 text-sm font-medium text-primary">
-            Home / Category
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Home Page Categories
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create easy-to-manage collections.
+            Choose the categories to display on the home page.
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger render={<Button className="w-full md:w-auto" />}>
-            <Plus />
-            Add category
-          </DialogTrigger>
-          <CategoryDialog mode="create" />
-        </Dialog>
       </div>
+      <div>
+        {isPending ? (
+          <div className="overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Select</TableHead>
+                </TableRow>
+              </TableHeader>
 
-      <Card>
-        <CardHeader className="border-b">
-          <CardTitle>All categories</CardTitle>
-          <CardDescription>
-            {categories.length} categories in your catalog
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-[70px_minmax(120px,1fr)_minmax(160px,2fr)_90px] gap-4 border-b bg-muted/30 px-6 py-3 text-xs font-medium text-muted-foreground">
-            <span>ID</span>
-            <span>Name</span>
-            <span>Image</span>
-            <span className="text-right">Actions</span>
+              <TableBody>
+                <CmsCategoryTableSkeleton rowCount={5} />
+              </TableBody>
+            </Table>
           </div>
-          <div className="divide-y">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="grid grid-cols-[70px_minmax(120px,1fr)_minmax(160px,2fr)_90px] items-center gap-4 px-6 py-4"
-              >
-                <span className="text-sm text-muted-foreground">
-                  {category.id}
-                </span>
-                <span className="font-medium">{category.name}</span>
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="h-14 w-24 rounded-md object-cover"
-                />
-                <div className="flex justify-end gap-1">
-                  <Dialog>
-                    <DialogTrigger
-                      render={<Button variant="ghost" size="icon-sm" />}
-                    >
-                      <Pencil />
-                      <span className="sr-only">Update {category.name}</span>
-                    </DialogTrigger>
-                    <CategoryDialog mode="update" category={category} />
-                  </Dialog>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`Delete ${category.name}`}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
-              </div>
-            ))}
+        ) : hasError ? (
+          <div className="rounded-md border p-6 text-center text-sm text-destructive">
+            Failed to load home page categories.
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <DataTable columns={columns} data={categories} />
+        )}
+      </div>
     </div>
   )
 }
 
-function CategoryDialog({
-  mode,
-  category,
-}: {
-  mode: "create" | "update"
-  category?: CategoryItem
-}) {
-  return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>
-          {mode === "create" ? "Create category" : "Update category"}
-        </DialogTitle>
-        <DialogDescription>
-          Category data contains only ID, name, and image.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="space-y-4 py-2">
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-id`}>ID</Label>
-          <Input
-            id={`${mode}-id`}
-            value={category?.id ?? "Auto generated"}
-            readOnly
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-name`}>Name</Label>
-          <Input
-            id={`${mode}-name`}
-            defaultValue={category?.name}
-            placeholder="Category name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`${mode}-image`}>Image</Label>
-          <div className="flex items-center gap-3">
-            <div className="flex size-16 items-center justify-center overflow-hidden rounded-lg border bg-muted">
-              {category?.image ? (
-                <img
-                  src={category.image}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              ) : (
-                <ImagePlus className="size-5 text-muted-foreground" />
-              )}
-            </div>
-            <Input
-              id={`${mode}-image`}
-              defaultValue={category?.image}
-              placeholder="Image URL"
-            />
-          </div>
-        </div>
-      </div>
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-        <Button type="button">{mode === "create" ? "Create" : "Update"}</Button>
-      </DialogFooter>
-    </DialogContent>
-  )
-}
+export default Category

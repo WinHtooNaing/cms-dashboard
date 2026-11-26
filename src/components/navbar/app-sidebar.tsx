@@ -1,7 +1,5 @@
 import * as React from "react"
 
-import { NavProjects } from "@/components/navbar/nav-projects"
-import { NavUser } from "@/components/navbar/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -9,119 +7,98 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Bot, Footprints, Heading, House, Info, Settings2 } from "lucide-react"
+
 import { Logo } from "./logo"
 import { NavMain } from "./nav-main"
+import { NavUser } from "@/components/navbar/nav-user"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "winhtoonaing2003@gmail.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Home",
-      url: "/home",
-      icon: House,
-      isActive: true,
-      items: [
-        {
-          title: "Image Carousel",
-          url: "/home",
-        },
-        {
-          title: "Category",
-          url: "/home/category",
-        },
-        {
-          title: "Related Products",
-          url: "/home/related-products",
-        },
-      ],
-    },
-    {
-      title: "Products",
-      url: "/products",
-      icon: Info,
-      items: [
-        {
-          title: "products",
-          url: "/products",
-        },
-        {
-          title: "Product Detail",
-          url: "/products/detail",
-        },
-      ],
-    },
-    {
-      title: "About",
-      url: "/about",
-      icon: Bot,
-      items: [
-        {
-          title: "content",
-          url: "/about",
-        },
-        {
-          title: "Get Started",
-          url: "/about-get-started",
-        },
-      ],
-    },
-    {
-      title: "Contact",
-      url: "/contact",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/contact/general",
-        },
-        {
-          title: "Team",
-          url: "/contact/team",
-        },
-        {
-          title: "Billing",
-          url: "/contact/billing",
-        },
-        {
-          title: "Limits",
-          url: "/contact/limits",
-        },
-      ],
-    },
-  ],
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { usePermissions } from "@/hooks/usePermissions"
 
-  global: [
-    {
-      name: "Headers",
-      url: "/header",
-      icon: <Heading />,
-    },
-    {
-      name: "Footers",
-      url: "/footer",
-      icon: <Footprints />,
-    },
-  ],
+import {
+  navigationGroups,
+  type NavigationGroup,
+  type NavigationItem,
+} from "@/config/navigation"
+function filterNavigationItems(
+  items: NavigationItem[],
+  hasPermission: (permission: string) => boolean
+): NavigationItem[] {
+  return items.flatMap((item) => {
+    const filteredChildren = item.items?.filter((child) =>
+      child.permission ? hasPermission(child.permission) : true
+    )
+
+    if (item.items && filteredChildren?.length === 0) {
+      return []
+    }
+
+    if (item.permission && !hasPermission(item.permission)) {
+      return []
+    }
+
+    return [
+      {
+        ...item,
+        items: filteredChildren,
+      },
+    ]
+  })
+}
+
+function filterNavigationGroups(
+  groups: NavigationGroup[],
+  hasPermission: (permission: string) => boolean
+): NavigationGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: filterNavigationItems(group.items, hasPermission),
+    }))
+    .filter((group) => group.items.length > 0)
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: currentUser } = useCurrentUser()
+
+  const { hasPermission, isPending, isError } = usePermissions()
+
+  const user = currentUser?.user
+
+  const filteredNavigation = filterNavigationGroups(
+    navigationGroups,
+    hasPermission
+  )
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects global={data.global} />
+
+      <SidebarContent className="overflow-x-hidden">
+        {!isPending &&
+          !isError &&
+          filteredNavigation.map((group) => (
+            <NavMain
+              key={group.title}
+              title={group.title}
+              items={group.items}
+            />
+          ))}
       </SidebarContent>
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {user && (
+          <NavUser
+            user={{
+              name: user.name,
+              email: user.email,
+            }}
+          />
+        )}
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   )

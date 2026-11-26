@@ -1,41 +1,44 @@
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import logo from "../../assets/logo/logo.png"
+
 import {
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { GalleryVerticalEndIcon } from "lucide-react"
-const teams = {
-  name: "Tech Heaven",
-  logo: <GalleryVerticalEndIcon />,
-  plan: "admin dashboard",
-}
+
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export function Logo() {
+  const { state, toggleSidebar, isMobile } = useSidebar()
+
+  const isCollapsed = state === "collapsed"
+
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
-              />
-            }
+    <SidebarMenu className="w-full">
+      <SidebarMenuItem
+        className={`flex items-center ${
+          isCollapsed ? "justify-center" : "justify-between"
+        }`}
+      >
+        {!isCollapsed && (
+          <div className="flex-1">
+            <img src={logo} alt="Company Logo" width={150} />
+          </div>
+        )}
+
+        {!isMobile && (
+          <button
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="flex size-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              {teams.logo}
-            </div>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{teams.name}</span>
-              <span className="truncate text-xs">{teams.plan}</span>
-            </div>
-          </DropdownMenuTrigger>
-        </DropdownMenu>
+            {isCollapsed ? (
+              <ChevronRight size={20} />
+            ) : (
+              <ChevronLeft size={20} />
+            )}
+          </button>
+        )}
       </SidebarMenuItem>
     </SidebarMenu>
   )

@@ -1,91 +1,203 @@
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
+
+import { Toaster } from "sonner"
+
+import OrderDetailsPage from "./components/orders/OrderDetailsPage"
 import Main from "./layouts/Main"
 import Login from "./pages/auth/Login"
+
 import Header from "./pages/Header"
 import Footer from "./pages/Footer"
-import ImageCarousel from "./pages/home/ImageCarousel"
-import Category from "./pages/home/Category"
-import RelatedProducts from "./pages/home/RelatedProducts"
 
-function SidebarPage({ title }: { title: string }) {
-  return <div>{title}</div>
-}
+import Category from "./pages/home/Category"
+import NewCollection from "./pages/home/NewCollection"
+import CarouselManagement from "./pages/home/CarouselManagement"
+
+import ContactDescription from "./pages/contact/ContactUsManagement"
+
+import Description from "./pages/about/Description"
+import WhoWeAre from "./pages/about/WhoWeAre"
+import OurPurposes from "./pages/about/OurPurposes"
+import CoreValues from "./pages/about/CoreValues"
+import WhyChooseUs from "./pages/about/WhyChooseUs"
+
+import Products from "./pages/products/Products"
+import ProductView from "./components/products/ProductView"
+
+import Order from "./pages/order/Orders"
+
+import { GuestRoute } from "./components/auth/GuestRoute"
+import { ProtectedRoute } from "./components/auth/ProtectedRoute"
+import PermissionRoute from "./components/auth/PermissionRoute"
+
+import UserManagement from "./pages/user/Users"
+import RolesPage from "./pages/role/Roles"
+import BrandPage from "./pages/brand/Brand"
+import CategoryPage from "./pages/category/Category"
+import ProfilePage from "./pages/profile/Profile"
+
+const router = createBrowserRouter([
+  {
+    element: <GuestRoute />,
+    children: [
+      {
+        path: "/login",
+        element: <Login />,
+      },
+    ],
+  },
+
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: "/",
+        element: <Main />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/products" replace />,
+          },
+
+          {
+            element: <PermissionRoute permission="cms:read" />,
+            children: [
+              {
+                path: "home",
+                element: <CarouselManagement />,
+              },
+              {
+                path: "home/category",
+                element: <Category />,
+              },
+              {
+                path: "home/new-collection",
+                element: <NewCollection />,
+              },
+              {
+                path: "about/description",
+                element: <Description />,
+              },
+              {
+                path: "about/whoweare",
+                element: <WhoWeAre />,
+              },
+              {
+                path: "about/ourpurposes",
+                element: <OurPurposes />,
+              },
+              {
+                path: "about/corevalues",
+                element: <CoreValues />,
+              },
+              {
+                path: "about/whychooseus",
+                element: <WhyChooseUs />,
+              },
+              {
+                path: "contact/description",
+                element: <ContactDescription />,
+              },
+              {
+                path: "header",
+                element: <Header />,
+              },
+              {
+                path: "footer",
+                element: <Footer />,
+              },
+            ],
+          },
+
+          {
+            element: <PermissionRoute permission="product:read" />,
+            children: [
+              {
+                path: "products",
+                element: <Products />,
+              },
+              {
+                path: "products/:id",
+                element: <ProductView />,
+              },
+            ],
+          },
+          {
+            element: <PermissionRoute permission="category:read" />,
+            children: [
+              {
+                path: "category",
+                element: <CategoryPage />,
+              },
+            ],
+          },
+
+          {
+            element: <PermissionRoute permission="brand:read" />,
+            children: [
+              {
+                path: "brand",
+                element: <BrandPage />,
+              },
+            ],
+          },
+
+          {
+            element: <PermissionRoute permission="order:read" />,
+            children: [
+              {
+                path: "order",
+                element: <Order />,
+              },
+              {
+                path: "order/:id",
+                element: <OrderDetailsPage />,
+              },
+            ],
+          },
+
+          {
+            element: <PermissionRoute permission="user:manage" />,
+            children: [
+              {
+                path: "users",
+                element: <UserManagement />,
+              },
+            ],
+          },
+
+          {
+            element: <PermissionRoute permission="role:manage" />,
+            children: [
+              {
+                path: "roles",
+                element: <RolesPage />,
+              },
+            ],
+          },
+
+          {
+            path: "profile",
+            element: <ProfilePage />,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
+  },
+])
 
 export function App() {
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Main />,
-      children: [
-        {
-          index: true,
-          element: <Navigate to="/home" replace />,
-        },
-        {
-          path: "/home",
-          element: <ImageCarousel />,
-        },
-        {
-          path: "/home/category",
-          element: <Category />,
-        },
-        {
-          path: "/home/related-products",
-          element: <RelatedProducts />,
-        },
-        {
-          path: "/products",
-          element: <SidebarPage title="Products" />,
-        },
-        {
-          path: "/products/detail",
-          element: <SidebarPage title="Product Detail" />,
-        },
-        {
-          path: "/about",
-          element: <SidebarPage title="About" />,
-        },
-        {
-          path: "/about-get-started",
-          element: <SidebarPage title="Get Started" />,
-        },
-        {
-          path: "/contact",
-          element: <SidebarPage title="Contact" />,
-        },
-        {
-          path: "/contact/general",
-          element: <SidebarPage title="Contact: General" />,
-        },
-        {
-          path: "/contact/team",
-          element: <SidebarPage title="Contact: Team" />,
-        },
-        {
-          path: "/contact/billing",
-          element: <SidebarPage title="Contact: Billing" />,
-        },
-        {
-          path: "/contact/limits",
-          element: <SidebarPage title="Contact: Limits" />,
-        },
-
-        {
-          path: "/header",
-          element: <Header />,
-        },
-        {
-          path: "/footer",
-          element: <Footer />,
-        },
-      ],
-    },
-    {
-      path: "/login",
-      element: <Login />,
-    },
-  ])
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster position="top-right" richColors />
+    </>
+  )
 }
 
 export default App

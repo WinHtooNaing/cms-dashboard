@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,24 +9,65 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, BadgeCheckIcon, LogOutIcon } from "lucide-react"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+import {
+  ChevronsUpDownIcon,
+  LogOutIcon,
+  Settings,
+  UserRound,
+} from "lucide-react"
+
+import { Link, useNavigate } from "react-router-dom"
+import { toast } from "sonner"
+import { logoutUser } from "@/service/auth.service"
+import { clearAuthStorage } from "@/lib/auth"
+import { useQueryClient } from "@tanstack/react-query"
+import { currentUserQueryKey } from "@/hooks/useCurrentUser"
+
+type User = {
+  name: string
+  email: string
+  avatar?: string
+}
+
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  async function handleLogout() {
+    try {
+      await logoutUser()
+
+      toast.success("Logged out successfully")
+    } catch (error) {
+      console.error("Logout error:", error)
+      toast.error("Logout request failed. Your local session was cleared.")
+    } finally {
+      clearAuthStorage()
+
+      queryClient.removeQueries({
+        queryKey: currentUserQueryKey,
+      })
+
+      navigate("/login", { replace: true })
+    }
+  }
+
+  const initials = user.name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -36,28 +78,34 @@ export function NavUser({
             }
           >
             <Avatar>
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>CN</AvatarFallback>
+              {user.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+              <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
+
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
+
             <ChevronsUpDownIcon className="ml-auto size-4" />
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
-            className="w-fit"
+            className="w-56"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <div className="flex items-center gap-2 px-2 py-2">
                   <Avatar>
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback>CN</AvatarFallback>
+                    {user.avatar && (
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                    )}
+                    <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
+
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
                     <span className="truncate text-xs">{user.email}</span>
@@ -67,15 +115,24 @@ export function NavUser({
             </DropdownMenuGroup>
 
             <DropdownMenuSeparator />
+
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheckIcon />
-                Account
+              <DropdownMenuItem
+                render={<Link to="/profile" />}
+                className="cursor-pointer"
+              >
+                <UserRound className="mr-2 size-4" />
+                Profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
+
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="cursor-pointer text-red-500 focus:text-red-500"
+            >
+              <LogOutIcon className="mr-2 size-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

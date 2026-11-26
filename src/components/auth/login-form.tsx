@@ -1,5 +1,3 @@
-import { cn } from "cn"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -8,15 +6,68 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+import { getApiErrorMessage } from "@/lib/api-error"
+import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Controller, useForm } from "react-hook-form"
+import * as z from "zod"
+import { loginSchema } from "@/schemas/loginSchema"
+import { loginUser, storeAuthSession } from "@/service/auth.service"
+import { useQueryClient } from "@tanstack/react-query"
+import { currentUserQueryKey } from "@/hooks/useCurrentUser"
+export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false)
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
+    try {
+      const response = await loginUser(data)
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+      if (response.user.role === "CUSTOMER") {
+        toast.error("Access Denied", {
+          description:
+            "Your account does not have permission to access the admin dashboard.",
+        })
+
+        return
+      }
+
+      storeAuthSession(response)
+
+      queryClient.setQueryData(currentUserQueryKey, {
+        user: response.user,
+        permissions: response.permissions,
+      })
+
+      toast.success("Login successful!", {
+        description: `Welcome back, ${response.user.name}!`,
+      })
+
+      navigate("/products", { replace: true })
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div>
       <Card>
         <CardHeader>
           <CardTitle className="font-bold text-primary">
@@ -27,30 +78,80 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor="email" className="text-primary">
+                      Email
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="email"
+                      type="email"
+                      placeholder="m@example.com"
+                      className={`${fieldState.invalid ? "border-red-500" : ""}`}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel htmlFor="password" className="text-primary">
+                      Password
+                    </FieldLabel>
+
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className={`pr-10 ${
+                          fieldState.invalid ? "border-red-500" : ""
+                        }`}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute top-1/2 right-1 size-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="size-4" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
               <Field>
-                <FieldLabel htmlFor="email" className="text-primary">
-                  Email
-                </FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password" className="text-primary">
-                    Password
-                  </FieldLabel>
-                </div>
-                <Input id="password" type="password" required />
-              </Field>
-              <Field>
-                <Button type="submit" className="cursor-pointer py-5">
-                  Login
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  className="w-full cursor-pointer py-5"
+                >
+                  {form.formState.isSubmitting ? "Logging in..." : "Login"}
                 </Button>
               </Field>
             </FieldGroup>
