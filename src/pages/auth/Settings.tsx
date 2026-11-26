@@ -28,7 +28,7 @@ const Settings = () => {
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <p className="mb-1 text-sm font-medium text-primary">
-              Auth / Settings
+              Auth / Profile
             </p>
           </div>
         </div>

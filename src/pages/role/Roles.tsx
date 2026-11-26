@@ -59,6 +59,7 @@ import {
 
 import { Separator } from "@/components/ui/separator"
 import { getApiErrorMessage } from "@/lib/api-error"
+import RolesPageSkeleton from "@/components/skeletons/RolesPageSkeleton"
 
 const permissionGroups = [
   { name: "Categories", resource: "category" },
@@ -251,12 +252,38 @@ export default function RolesPage() {
     setPermissionDialogOpen(true)
   }
 
-  const togglePermission = (permissionId: string) => {
-    setSelectedPermissionIds((previous) =>
-      previous.includes(permissionId)
-        ? previous.filter((id) => id !== permissionId)
-        : [...previous, permissionId]
-    )
+  const togglePermission = (permission: Permission) => {
+    const readPermission = getRequiredReadPermission(permission, permissions)
+
+    setSelectedPermissionIds((previous) => {
+      const isSelected = previous.includes(permission.id)
+
+      if (permission.code.endsWith(":read") && isSelected) {
+        const resource = permission.code.split(":")[0]
+
+        const dependentIds = permissions
+          .filter((item) => {
+            return (
+              item.code.startsWith(`${resource}:`) &&
+              item.code !== permission.code &&
+              getRequiredReadPermission(item, permissions) !== null
+            )
+          })
+          .map((item) => item.id)
+
+        return previous.filter(
+          (id) => id !== permission.id && !dependentIds.includes(id)
+        )
+      }
+
+      if (readPermission && !previous.includes(readPermission.id)) {
+        return previous
+      }
+
+      return isSelected
+        ? previous.filter((id) => id !== permission.id)
+        : [...previous, permission.id]
+    })
   }
 
   const togglePermissionGroup = (resource: string) => {
@@ -270,11 +297,16 @@ export default function RolesPage() {
       selectedPermissionIds.includes(id)
     )
 
-    setSelectedPermissionIds((previous) =>
-      allSelected
-        ? previous.filter((id) => !groupIds.includes(id))
-        : [...new Set([...previous, ...groupIds])]
-    )
+    if (allSelected) {
+      setSelectedPermissionIds((previous) =>
+        previous.filter((id) => !groupIds.includes(id))
+      )
+      return
+    }
+
+    setSelectedPermissionIds((previous) => [
+      ...new Set([...previous, ...groupIds]),
+    ])
   }
 
   const handleSavePermissions = () => {
@@ -286,7 +318,7 @@ export default function RolesPage() {
     })
   }
   if (isRolesLoading) {
-    return <div className="p-6">Loading roles...</div>
+    return <RolesPageSkeleton />
   }
 
   if (isRolesError) {
@@ -639,18 +671,30 @@ export default function RolesPage() {
                       </div>
 
                       <div className="grid gap-3 p-4 sm:grid-cols-2">
-                        {groupPermissions.map((permission) => (
-                          <PermissionCheckbox
-                            key={permission.id}
-                            permission={permission}
-                            checked={selectedPermissionIds.includes(
-                              permission.id
-                            )}
-                            onCheckedChange={() =>
-                              togglePermission(permission.id)
-                            }
-                          />
-                        ))}
+                        {groupPermissions.map((permission) => {
+                          const requiredRead = getRequiredReadPermission(
+                            permission,
+                            permissions
+                          )
+
+                          const isDisabled =
+                            requiredRead !== null &&
+                            !selectedPermissionIds.includes(requiredRead.id)
+
+                          return (
+                            <PermissionCheckbox
+                              key={permission.id}
+                              permission={permission}
+                              checked={selectedPermissionIds.includes(
+                                permission.id
+                              )}
+                              disabled={isDisabled}
+                              onCheckedChange={() =>
+                                togglePermission(permission)
+                              }
+                            />
+                          )
+                        })}
                       </div>
                     </div>
                   )
@@ -715,14 +759,32 @@ function SummaryCard({
     </Card>
   )
 }
+function getRequiredReadPermission(
+  permission: Permission,
+  permissions: Permission[]
+) {
+  const [resource, action] = permission.code.split(":")
 
+  // Read permission does not depend on another permission.
+  if (action === "read") return null
+
+  // Check whether this resource has a read permission.
+  const readPermission = permissions.find(
+    (item) => item.code === `${resource}:read`
+  )
+
+  // If no read permission exists, this permission is independent.
+  return readPermission ?? null
+}
 function PermissionCheckbox({
   permission,
   checked,
+  disabled = false,
   onCheckedChange,
 }: {
   permission: Permission
   checked: boolean
+  disabled?: boolean
   onCheckedChange: () => void
 }) {
   const action = permission.code.split(":")[1]
@@ -732,13 +794,18 @@ function PermissionCheckbox({
       <Checkbox
         id={permission.id}
         checked={checked}
+        disabled={disabled}
         onCheckedChange={onCheckedChange}
       />
 
       <div className="grid gap-1">
         <Label
           htmlFor={permission.id}
-          className="cursor-pointer text-sm font-medium"
+          className={`text-sm font-medium ${
+            disabled
+              ? "cursor-not-allowed text-muted-foreground opacity-50"
+              : "cursor-pointer"
+          }`}
         >
           {permissionLabels[action] ?? action}
         </Label>

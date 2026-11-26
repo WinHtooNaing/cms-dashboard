@@ -17,7 +17,12 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-import { ChevronsUpDownIcon, LogOutIcon, Settings } from "lucide-react"
+import {
+  ChevronsUpDownIcon,
+  LogOutIcon,
+  Settings,
+  UserRound,
+} from "lucide-react"
 
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
@@ -113,11 +118,11 @@ export function NavUser({ user }: { user: User }) {
 
             <DropdownMenuGroup>
               <DropdownMenuItem
-                render={<Link to="/settings" />}
+                render={<Link to="/profile" />}
                 className="cursor-pointer"
               >
-                <Settings className="mr-2 size-4" />
-                Settings
+                <UserRound className="mr-2 size-4" />
+                Profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
 

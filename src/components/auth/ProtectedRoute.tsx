@@ -1,24 +1,25 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import FullPageLoader from "../skeletons/FullPageLoader"
 
 export function ProtectedRoute() {
   const hasRefreshToken = Boolean(localStorage.getItem("refreshToken"))
 
-  const { data, isPending } = useCurrentUser()
+  const { data, isPending, isError } = useCurrentUser()
 
   if (!hasRefreshToken) {
     return <Navigate to="/login" replace />
   }
 
   if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Loading your account...
-      </div>
-    )
+    return <FullPageLoader />
   }
 
-  if (!data?.user.isActive) {
+  if (isError || !data?.user?.isActive) {
+    return <Navigate to="/login" replace />
+  }
+
+  if (data.user.role === "CUSTOMER") {
     return <Navigate to="/login" replace />
   }
 

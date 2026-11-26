@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { formatBusinessHours } from "@/util/formatBusinessHours"
+import { useEffect } from "react"
 import {
   contactUsSchema,
   daysOfWeek,
@@ -26,12 +27,16 @@ type GetInTouchFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   contact: ContactUsValues
+  onSave: (values: ContactUsValues) => Promise<void>
+  isSaving: boolean
 }
 
 const GetInTouchFormDialog = ({
   open,
   onOpenChange,
   contact,
+  onSave,
+  isSaving,
 }: GetInTouchFormDialogProps) => {
   const form = useForm<ContactUsValues>({
     resolver: zodResolver(contactUsSchema),
@@ -39,9 +44,18 @@ const GetInTouchFormDialog = ({
     mode: "onBlur",
     reValidateMode: "onChange",
   })
+
+  useEffect(() => {
+    if (open) {
+      form.reset(contact)
+    }
+  }, [open, contact, form])
   const selectedDays = form.watch("workingDays")
   const openingTime = form.watch("openingTime")
   const closingTime = form.watch("closingTime")
+  const handleSubmit = async (values: ContactUsValues) => {
+    await onSave(values)
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-2xl">
@@ -49,7 +63,10 @@ const GetInTouchFormDialog = ({
           <DialogTitle className="text-xl">Edit Get in Touch</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 flex-1 scrollbar-none overflow-y-auto">
-          <form className="space-y-8 pr-2">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-8 pr-2"
+          >
             <section className="space-y-4">
               <div className="flex items-center gap-3 border-b pb-3">
                 <div className="rounded-lg bg-primary/10 p-2 text-primary">
@@ -437,11 +454,14 @@ const GetInTouchFormDialog = ({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isSaving}
               >
                 Cancel
               </Button>
 
-              <Button type="button">Save Changes</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
             </DialogFooter>
           </form>
         </div>

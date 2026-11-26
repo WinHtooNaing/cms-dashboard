@@ -41,6 +41,7 @@ import {
   aboutContentSchema,
   type AboutContentFormValues,
 } from "@/schemas/aboutSchema"
+import AboutContentSkeleton from "../skeletons/AboutContentSkeleton"
 
 export type AboutContentItem = {
   id: string
@@ -142,7 +143,9 @@ const AboutContentManager = ({
       console.error("Failed to update content:", error)
     }
   }
-
+  if (isLoading) {
+    return <AboutContentSkeleton />
+  }
   return (
     <div className="space-y-8 pt-4 sm:pt-6">
       {/* Page Header */}
@@ -187,16 +190,7 @@ const AboutContentManager = ({
             </TableHeader>
 
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-32 text-center text-muted-foreground"
-                  >
-                    Loading content...
-                  </TableCell>
-                </TableRow>
-              ) : sortedItems.length > 0 ? (
+              {sortedItems.length > 0 ? (
                 sortedItems.map((item, index) => (
                   <TableRow key={item.id}>
                     <TableCell className="text-muted-foreground">

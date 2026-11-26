@@ -50,6 +50,7 @@ import { brandSchema, type BrandFormData } from "@/schemas/brandSchema"
 
 import { columns, type BrandTableRowWithActions } from "./column"
 import { features } from "./data-table-features"
+import BrandTableSkeleton from "../skeletons/BrandTableSkeleton"
 
 const PAGE_SIZE = 10
 const EMPTY_BRANDS: BrandTableRowWithActions[] = []
@@ -365,14 +366,7 @@ const BrandDataTable = () => {
           </TableHeader>
           <TableBody>
             {isPending ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Loading brands...
-                </TableCell>
-              </TableRow>
+              <BrandTableSkeleton columnCount={columns.length} rowCount={5} />
             ) : isError ? (
               <TableRow>
                 <TableCell

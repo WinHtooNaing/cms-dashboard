@@ -11,9 +11,18 @@ import {
   getNewCollectionProduct,
   type NewCollectionItem,
 } from "@/service/new-collection.service"
+import NewCollectionTableSkeleton from "@/components/skeletons/NewCollectionTableSkeleton"
+
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { Product } from "@/types/product"
 
-const NEW_COLLECTION_SECTION_ID = "590fc0c0-6785-45d1-9312-f9d681b8480c"
+const NEW_COLLECTION_SECTION_ID = import.meta.env.VITE_COLLECTION
 
 const getProductIdFromItem = (item: NewCollectionItem): string | null => {
   const content = item.content
@@ -85,7 +94,9 @@ const NewCollection = () => {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to add to new collection"
+        error instanceof Error
+          ? error.message
+          : "Failed to add to new collection"
       )
     },
   })
@@ -151,8 +162,20 @@ const NewCollection = () => {
       </div>
       <div>
         {isPending ? (
-          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-            Loading products...
+          <div className="overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Select</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                <NewCollectionTableSkeleton rowCount={5} />
+              </TableBody>
+            </Table>
           </div>
         ) : (
           <DataTable columns={columns} data={products} />
