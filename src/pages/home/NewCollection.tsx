@@ -11,6 +11,15 @@ import {
   getNewCollectionProduct,
   type NewCollectionItem,
 } from "@/service/new-collection.service"
+import NewCollectionTableSkeleton from "@/components/skeletons/NewCollectionTableSkeleton"
+
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { Product } from "@/types/product"
 
 const NEW_COLLECTION_SECTION_ID = import.meta.env.VITE_COLLECTION
@@ -153,8 +162,20 @@ const NewCollection = () => {
       </div>
       <div>
         {isPending ? (
-          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-            Loading products...
+          <div className="overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Select</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                <NewCollectionTableSkeleton rowCount={5} />
+              </TableBody>
+            </Table>
           </div>
         ) : (
           <DataTable columns={columns} data={products} />

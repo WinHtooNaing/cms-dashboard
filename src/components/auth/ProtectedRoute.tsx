@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import FullPageLoader from "../skeletons/FullPageLoader"
 
 export function ProtectedRoute() {
   const hasRefreshToken = Boolean(localStorage.getItem("refreshToken"))
@@ -11,11 +12,7 @@ export function ProtectedRoute() {
   }
 
   if (isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        Loading your account...
-      </div>
-    )
+    return <FullPageLoader />
   }
 
   if (isError || !data?.user?.isActive) {

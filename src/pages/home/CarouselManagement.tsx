@@ -16,6 +16,7 @@ import {
 } from "@/service/carousel.service"
 import type { Carousel } from "@/types/carousel"
 import type { CarouselSchemaValues } from "@/schemas/carouselSchema"
+import CarouselManagementSkeleton from "@/components/skeletons/CarouselManagementSkeleton"
 
 const sectionId = import.meta.env.VITE_IMAGE_CAROUSEL
 const queryKey = ["carousels", sectionId]
@@ -130,9 +131,7 @@ const CarouselManagement = () => {
 
       <div className="container mx-auto">
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            Loading carousels...
-          </p>
+          <CarouselManagementSkeleton />
         ) : isError ? (
           <div className="space-y-3 py-12 text-center">
             <p className="text-sm text-destructive">

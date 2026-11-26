@@ -11,6 +11,14 @@ import {
   type CmsCategoryItem,
 } from "@/service/cms.category.service"
 import { getCategories } from "@/service/category.service"
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import CmsCategoryTableSkeleton from "@/components/skeletons/CmsCategoryTableSkeleton"
 
 const CATEGORY_SECTION_ID = import.meta.env.VITE_CATEGORY
 
@@ -146,8 +154,20 @@ const Category = () => {
       </div>
       <div>
         {isPending ? (
-          <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-            Loading categories...
+          <div className="overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Image</TableHead>
+                  <TableHead>Select</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                <CmsCategoryTableSkeleton rowCount={5} />
+              </TableBody>
+            </Table>
           </div>
         ) : hasError ? (
           <div className="rounded-md border p-6 text-center text-sm text-destructive">

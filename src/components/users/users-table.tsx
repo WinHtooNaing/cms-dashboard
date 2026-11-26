@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { UsersTableSkeleton } from "../skeletons/UsersTableSkeleton"
 
 const roleStyles: Record<string, string> = {
   ADMIN: "bg-red-100 text-red-700",
@@ -66,14 +67,7 @@ export function UsersTable({
 
           <TableBody>
             {isPending ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  Loading users...
-                </TableCell>
-              </TableRow>
+              <UsersTableSkeleton rowCount={5} />
             ) : isError ? (
               <TableRow>
                 <TableCell

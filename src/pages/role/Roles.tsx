@@ -59,6 +59,7 @@ import {
 
 import { Separator } from "@/components/ui/separator"
 import { getApiErrorMessage } from "@/lib/api-error"
+import RolesPageSkeleton from "@/components/skeletons/RolesPageSkeleton"
 
 const permissionGroups = [
   { name: "Categories", resource: "category" },
@@ -317,7 +318,7 @@ export default function RolesPage() {
     })
   }
   if (isRolesLoading) {
-    return <div className="p-6">Loading roles...</div>
+    return <RolesPageSkeleton />
   }
 
   if (isRolesError) {
