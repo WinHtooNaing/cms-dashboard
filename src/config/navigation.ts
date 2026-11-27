@@ -1,5 +1,6 @@
 import {
   BracesIcon,
+  ChartArea,
   Contact,
   House,
   Info,
@@ -35,6 +36,19 @@ export const navigationGroups: NavigationGroup[] = [
     title: "E-commerce",
 
     items: [
+      {
+        title: "Overview",
+        url: "/overview",
+        icon: ChartArea,
+
+        items: [
+          {
+            title: "overview",
+            url: "/overview",
+            permission: "role:manage",
+          },
+        ],
+      },
       {
         title: "Products",
         url: "/products",

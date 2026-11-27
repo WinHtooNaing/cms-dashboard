@@ -1,5 +1,15 @@
+
+
 import api from "@/lib/axios"
-import type { GetUsersParams, UsersResponse } from "@/types/user"
+
+import type {
+  GetUsersParams,
+  UsersResponse,
+  CreatedUser,
+  CreateUserPayload,
+  User,
+  UserStatus,
+} from "@/types/user"
 
 type ApiResponse<T> = {
   success: boolean
@@ -8,62 +18,55 @@ type ApiResponse<T> = {
   path: string
 }
 
+
 export const getUsers = async (
   params: GetUsersParams
 ): Promise<UsersResponse> => {
-  const response = await api.get<ApiResponse<UsersResponse>>("/users", {
-    params,
-  })
+  const response = await api.get<ApiResponse<UsersResponse>>(
+    "/users",
+    {
+      params,
+    }
+  )
 
   return response.data.data
 }
 
+// ASSIGN USER ROLE
 export const assignUserRole = async (
   userId: string,
   roleId: string
 ) => {
-  const response = await api.patch(`/rbac/users/${userId}/role`, {
-    roleId,
-  })
+  const response = await api.patch(
+    `/rbac/users/${userId}/role`,
+    { roleId }
+  )
 
   return response.data
 }
-export type CreateUserPayload = {
-  name: string
-  email: string
-  phone: string
-  password: string
-  roleId: string
-}
-export type CreatedUser = {
-  id: string
-  name: string
-  email: string
-  phone: string | null
-  roleId: string
-  isActive: boolean
-  status: string
-  createdAt: string
-  updatedAt: string
-  role: {
-    id: string
-    name: string
-    description: string
-  }
-}
 
-type CreateUserResponse = {
-  success: boolean
-  data: CreatedUser
-  timestamp: string
-  path: string
-}
+// CREATE USER
 export const createUser = async (
   payload: CreateUserPayload
 ): Promise<CreatedUser> => {
-  const response = await api.post<CreateUserResponse>(
+  const response = await api.post<ApiResponse<CreatedUser>>(
     "/users",
     payload
+  )
+
+  return response.data.data
+}
+
+
+
+
+export const updateUserStatus = async (
+  userId: string,
+  status: UserStatus
+): Promise<User> => {
+  const response = await api.patch<ApiResponse<User>>(
+    `/users/${userId}/status`,
+    { status }
   )
 
   return response.data.data

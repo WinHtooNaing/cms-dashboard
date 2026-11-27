@@ -42,10 +42,8 @@ export function LoginForm() {
 
       if (response.user.role === "CUSTOMER") {
         toast.error("Access Denied", {
-          description:
-            "Your account does not have permission to access the admin dashboard.",
+          description: "Credential Error",
         })
-
         return
       }
 
