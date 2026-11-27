@@ -5,7 +5,19 @@ import type { UsersTableProps } from "./types"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import type { User, UserStatus } from "@/types/user"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Table,
   TableBody,
@@ -35,7 +47,11 @@ const roleStyles: Record<string, string> = {
   STAFF: "bg-blue-100 text-blue-700",
   CUSTOMER: "bg-green-100 text-green-700",
 }
-
+const statusStyles: Record<string, string> = {
+  ACTIVE: "bg-green-100 text-green-700 border-green-200",
+  SUSPENDED: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  DEACTIVATED: "bg-red-100 text-red-700 border-red-200",
+}
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -48,6 +64,7 @@ function getInitials(name: string) {
 export function UsersTable({
   users,
   roles,
+  currentUserId,
   isPending,
   isError,
   error,
@@ -59,7 +76,23 @@ export function UsersTable({
   onLimitChange,
   onView,
   onAssignRole,
+  onUpdateStatus,
 }: UsersTableProps) {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false)
+
+  const isActive = selectedUser?.status === "ACTIVE"
+
+  const nextStatus: UserStatus = isActive ? "DEACTIVATED" : "ACTIVE"
+
+  const handleConfirmStatusChange = () => {
+    if (!selectedUser) return
+
+    onUpdateStatus(selectedUser, nextStatus)
+    setStatusDialogOpen(false)
+    setSelectedUser(null)
+  }
   return (
     <>
       <div className="overflow-x-auto">
@@ -68,6 +101,7 @@ export function UsersTable({
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Permissions</TableHead>
               <TableHead>Joined Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -76,11 +110,11 @@ export function UsersTable({
 
           <TableBody>
             {isPending ? (
-              <UsersTableSkeleton rowCount={5} />
+              <UsersTableSkeleton rowCount={6} />
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-32 text-center text-destructive"
                 >
                   Failed to load users: {error?.message}
@@ -88,6 +122,7 @@ export function UsersTable({
               </TableRow>
             ) : users.length > 0 ? (
               users.map((user) => {
+                const isCurrentUser = user.id === currentUserId
                 const role = roles.find((item) => item.id === user.roleId)
 
                 return (
@@ -122,7 +157,18 @@ export function UsersTable({
                         {user.role.name}
                       </Badge>
                     </TableCell>
-
+                    {/* Status */}
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          statusStyles[user.status] ??
+                          "bg-gray-100 text-gray-700"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
                     {/* Permissions */}
                     <TableCell>
                       <span className="text-sm">
@@ -152,17 +198,49 @@ export function UsersTable({
                             View Details
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={() => onAssignRole(user)}>
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            disabled={isCurrentUser}
+                            onClick={() => {
+                              if (!isCurrentUser) {
+                                onAssignRole(user)
+                              }
+                            }}
+                          >
                             <Shield className="mr-2 size-4" />
                             Assign Role
                           </DropdownMenuItem>
 
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                          <DropdownMenuItem
+                            disabled={isCurrentUser}
+                            className={
+                              user.status === "ACTIVE"
+                                ? "text-destructive focus:text-destructive"
+                                : "text-green-600 focus:text-green-600"
+                            }
+                            onClick={() => {
+                              if (!isCurrentUser) {
+                                setSelectedUser(user)
+                                setStatusDialogOpen(true)
+                              }
+                            }}
+                          >
                             <CircleSlash className="mr-2 size-4" />
-                            Deactivate
+
+                            {user.status === "ACTIVE"
+                              ? "Deactivate"
+                              : "Activate"}
                           </DropdownMenuItem>
+
+                          {isCurrentUser && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem disabled>
+                                You cannot modify your own account
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -251,6 +329,36 @@ export function UsersTable({
           </div>
         </div>
       </div>
+      <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isActive ? "Deactivate User?" : "Activate User?"}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {isActive
+                ? `Are you sure you want to deactivate ${selectedUser?.name}'s account? They will no longer be able to access their account.`
+                : `Are you sure you want to activate ${selectedUser?.name}'s account? They will regain access to their account.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleConfirmStatusChange}
+              className={
+                isActive
+                  ? "text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {isActive ? "Deactivate" : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

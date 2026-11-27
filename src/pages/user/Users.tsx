@@ -8,11 +8,16 @@ import { UserPlus, Shield } from "lucide-react"
 
 import { toast } from "sonner"
 
-import type { User } from "@/types/user"
+import type { User, UserStatus } from "@/types/user"
 
 import type { CreateUserFormValues } from "@/schemas/userSchema"
 
-import { getUsers, assignUserRole, createUser } from "@/service/user.service"
+import {
+  getUsers,
+  assignUserRole,
+  createUser,
+  updateUserStatus,
+} from "@/service/user.service"
 
 import type { GetUsersParams } from "@/types/user"
 
@@ -31,6 +36,7 @@ import { UsersTable } from "@/components/users/users-table"
 import { UserDetailsDialog } from "@/components/users/user-details-dialog"
 import { AssignRoleDialog } from "@/components/users/assign-role-dialog"
 import { CreateUserDialog } from "@/components/users/create-user-dialog"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
 
 export default function UsersPage() {
   const queryClient = useQueryClient()
@@ -38,7 +44,9 @@ export default function UsersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const { hasPermission } = usePermissions()
+  const { data: currentUserData } = useCurrentUser()
 
+  const currentUserId = currentUserData?.user?.id
   const canManageRoles = hasPermission("role:manage")
   const canCreateUser = hasPermission("user:manage")
 
@@ -106,9 +114,6 @@ export default function UsersPage() {
 
     setSearchParams(params)
   }
-  // ----------------------------------
-  // DEBOUNCED SEARCH
-  // ----------------------------------
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -127,16 +132,9 @@ export default function UsersPage() {
     return () => clearTimeout(timeout)
   }, [searchInput, search])
 
-  // ----------------------------------
-  // SYNC SEARCH WITH URL
-  // ----------------------------------
-
   useEffect(() => {
     setSearchInput(search)
   }, [search])
-  // ----------------------------------
-  // QUERY PARAMETERS
-  // ----------------------------------
 
   const queryParams: GetUsersParams = {
     page,
@@ -239,6 +237,32 @@ export default function UsersPage() {
   // ASSIGN ROLE
   // ----------------------------------
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ userId, status }: { userId: string; status: UserStatus }) =>
+      updateUserStatus(userId, status),
+
+    onSuccess: (updatedUser) => {
+      toast.success(
+        `${updatedUser.name}'s account has been ${
+          updatedUser.status === "ACTIVE" ? "activated" : "deactivated"
+        }.`
+      )
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      })
+    },
+
+    onError: (error) => {
+      toast.error(error.message || "Failed to update user status.")
+    },
+  })
+  const handleUpdateUserStatus = (user: User, status: UserStatus) => {
+    updateStatusMutation.mutate({
+      userId: user.id,
+      status,
+    })
+  }
   const assignRoleMutation = useMutation({
     mutationFn: ({ userId, roleId }: { userId: string; roleId: string }) =>
       assignUserRole(userId, roleId),
@@ -403,6 +427,8 @@ export default function UsersPage() {
         <CardContent>
           <UsersTable
             users={users}
+            currentUserId={currentUserId}
+
             roles={roles}
             isPending={isPending}
             isError={isError}
@@ -414,6 +440,8 @@ export default function UsersPage() {
             onPageChange={handlePageChange}
             onLimitChange={handleLimitChange}
             onView={handleViewUser}
+            onUpdateStatus={handleUpdateUserStatus}
+
             onAssignRole={handleOpenAssignDialog}
           />
         </CardContent>

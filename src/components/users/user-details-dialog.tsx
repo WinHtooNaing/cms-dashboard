@@ -43,8 +43,8 @@ export function UserDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-xl">
+        <DialogHeader className="shrink-0">
           <DialogTitle>User Details</DialogTitle>
 
           <DialogDescription>
@@ -53,7 +53,7 @@ export function UserDetailsDialog({
         </DialogHeader>
 
         {user && (
-          <div className="space-y-5">
+          <div className="min-h-0 flex-1 scrollbar-none space-y-5 overflow-y-auto">
             <div className="flex items-center gap-3">
               <Avatar className="size-12">
                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
@@ -61,7 +61,6 @@ export function UserDetailsDialog({
 
               <div>
                 <h3 className="font-semibold">{user.name}</h3>
-
                 <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
             </div>
@@ -71,7 +70,6 @@ export function UserDetailsDialog({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Phone</p>
-
                 <p className="mt-1 font-medium">
                   {user.phone ?? "Not provided"}
                 </p>
@@ -79,7 +77,6 @@ export function UserDetailsDialog({
 
               <div>
                 <p className="text-muted-foreground">Role</p>
-
                 <Badge
                   variant="outline"
                   className={`mt-1 ${roleStyles[user.role.name] ?? ""}`}
@@ -90,7 +87,6 @@ export function UserDetailsDialog({
 
               <div className="col-span-2">
                 <p className="text-muted-foreground">Joined Date</p>
-
                 <p className="mt-1 font-medium">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </p>
@@ -113,7 +109,6 @@ export function UserDetailsDialog({
                   {selectedRole.permissions.map((permission) => (
                     <div key={permission.id} className="rounded-md border p-3">
                       <p className="text-sm font-medium">{permission.code}</p>
-
                       <p className="text-xs text-muted-foreground">
                         {permission.description}
                       </p>
