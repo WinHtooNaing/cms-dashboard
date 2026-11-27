@@ -9,15 +9,23 @@ export type UserDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-export type UsersTableProps = {
+
+
+export interface UsersTableProps {
   users: User[]
   roles: Role[]
+
   isPending: boolean
   isError: boolean
   error: Error | null
+
   page: number
+  limit: number
+  total: number
   totalPages: number
+
   onPageChange: (page: number) => void
+onLimitChange: (value: string | null) => void
   onView: (user: User) => void
   onAssignRole: (user: User) => void
 }

@@ -35,6 +35,7 @@ import RolesPage from "./pages/role/Roles"
 import BrandPage from "./pages/brand/Brand"
 import CategoryPage from "./pages/category/Category"
 import ProfilePage from "./pages/profile/Profile"
+import OverView from "./pages/overview/OverView"
 
 const router = createBrowserRouter([
   {
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
           {
             element: <PermissionRoute permission="cms:read" />,
             children: [
+              {
+                path: "overview",
+                element: <OverView />,
+              },
               {
                 path: "home",
                 element: <CarouselManagement />,

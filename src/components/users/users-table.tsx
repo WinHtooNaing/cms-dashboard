@@ -1,4 +1,4 @@
-import { MoreHorizontal, Eye, Shield, Trash2 } from "lucide-react"
+import { MoreHorizontal, Eye, Shield, CircleSlash } from "lucide-react"
 
 import type { UsersTableProps } from "./types"
 
@@ -14,7 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,8 +52,11 @@ export function UsersTable({
   isError,
   error,
   page,
+  limit,
+  total,
   totalPages,
   onPageChange,
+  onLimitChange,
   onView,
   onAssignRole,
 }: UsersTableProps) {
@@ -150,12 +159,9 @@ export function UsersTable({
 
                           <DropdownMenuSeparator />
 
-                          <DropdownMenuItem
-                            disabled
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 size-4" />
-                            Delete User
+                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                            <CircleSlash className="mr-2 size-4" />
+                            Deactivate
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -177,30 +183,72 @@ export function UsersTable({
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Page {page} of {totalPages}
-        </p>
+      {/* PAGINATION */}
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1 || isPending}
-            onClick={() => onPageChange(page - 1)}
-          >
-            Previous
-          </Button>
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* RESULTS INFORMATION */}
 
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages || isPending}
-            onClick={() => onPageChange(page + 1)}
-          >
-            Next
-          </Button>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span>Showing</span>
+
+          <span className="font-medium text-foreground">
+            {total === 0 ? 0 : (page - 1) * limit + 1}
+            {" - "}
+            {Math.min(page * limit, total)}
+          </span>
+
+          <span>of {total} users</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          {/* PAGE SIZE */}
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              Rows per page
+            </span>
+
+            <Select value={String(limit)} onValueChange={onLimitChange}>
+              <SelectTrigger className="w-18.75">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="8">8</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* PAGE NAVIGATION */}
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isPending}
+              onClick={() => onPageChange(page - 1)}
+            >
+              Previous
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isPending || totalPages === 0}
+              onClick={() => onPageChange(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </>
