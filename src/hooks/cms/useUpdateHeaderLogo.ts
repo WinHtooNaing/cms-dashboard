@@ -7,6 +7,7 @@ import {
 } from "@/service/cms/headerService"
 
 import { HEADER_LOGO_QUERY_KEY } from "./useHeaderLogo"
+import { SITE_LOGO_QUERY_KEY } from "./useSiteSettings"
 
 type UpdateHeaderLogoVariables = {
   sectionId: string
@@ -23,13 +24,16 @@ export const useUpdateHeaderLogo = () => {
     }: UpdateHeaderLogoVariables) => updateHeaderLogo(sectionId, logoFile),
 
     onSuccess: (updatedSection: HeaderSection) => {
+      // Update header section cache
       queryClient.setQueryData(
         HEADER_LOGO_QUERY_KEY,
         updatedSection
       )
 
-      queryClient.invalidateQueries({
-        queryKey: HEADER_LOGO_QUERY_KEY,
+      // Update public site logo cache
+      queryClient.setQueryData(SITE_LOGO_QUERY_KEY, {
+        imageUrl: updatedSection.imageUrl,
+        alt: String(updatedSection.content.alt ?? "Company Logo"),
       })
 
       toast.success("Website logo updated successfully!")

@@ -1,14 +1,10 @@
 import { z } from "zod"
 
-const REQUIRED_WIDTH = 150
-const REQUIRED_HEIGHT = 50
+const REQUIRED_WIDTH = 900
+const REQUIRED_HEIGHT = 300
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
-const ACCEPTED_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webP",
-]
+const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"]
 
 const validateImageDimensions = (
   file: File
@@ -49,22 +45,22 @@ const validateImageDimensions = (
 
 export const headerSchema = z.object({
   logoFile: z
-  .custom<File>((value)=>
-    typeof File !== "undefined" && value instanceof File,
-  {
-    message: "Please select a logo image.",
-  }
-
-  ).refine((file)=> ACCEPTED_TYPES.includes(file.type), {
+    .custom<File>(
+      (value) => typeof File !== "undefined" && value instanceof File,
+      {
+        message: "Please select a logo image.",
+      }
+    )
+    .refine((file) => ACCEPTED_TYPES.includes(file.type), {
       message: "Only PNG, JPG, and JPEG images are allowed.",
     })
-     .refine((file) => file.size > 0, {
+    .refine((file) => file.size > 0, {
       message: "The selected file is empty.",
     })
     .refine((file) => file.size <= MAX_FILE_SIZE, {
       message: "The logo image must not exceed 5 MB.",
     })
-    .superRefine(async (file, ctx)=>{
+    .superRefine(async (file, ctx) => {
       if (
         !ACCEPTED_TYPES.includes(file.type) ||
         file.size === 0 ||
@@ -72,7 +68,8 @@ export const headerSchema = z.object({
       ) {
         return
       }
-       const result = await validateImageDimensions(file)
+
+      const result = await validateImageDimensions(file)
 
       if (!result.valid) {
         ctx.addIssue({
@@ -80,7 +77,7 @@ export const headerSchema = z.object({
           message: result.message ?? "Invalid image dimensions.",
         })
       }
-    
     }),
 })
+
 export type HeaderFormValues = z.infer<typeof headerSchema>

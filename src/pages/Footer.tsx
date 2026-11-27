@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import {
   FileText,
@@ -998,14 +998,15 @@ const SupportLinkDialog = ({
 
   const isEditing = Boolean(selectedLink)
 
-  const resetForm = () => {
+  useEffect(() => {
+    if (!open) return
+
     setName(selectedLink?.name ?? "")
     setDestinationType(selectedLink?.destinationType ?? "internal")
     setPageKey(selectedLink?.pageKey ?? "")
     setUrl(selectedLink?.url ?? "")
-
     setError("")
-  }
+  }, [open, selectedLink])
 
   const handleSubmit = () => {
     if (!name.trim()) {
@@ -1040,13 +1041,7 @@ const SupportLinkDialog = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (open) resetForm()
-        onOpenChange(open)
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -1185,12 +1180,13 @@ const SocialLinkDialog = ({
 
   const isEditing = Boolean(selectedLink)
 
-  const resetForm = () => {
+  useEffect(() => {
+    if (!open) return
+
     setPlatform(selectedLink?.platform ?? "facebook")
     setUrl(selectedLink?.url ?? "")
-
     setError("")
-  }
+  }, [open, selectedLink])
 
   const handleSubmit = () => {
     try {
@@ -1220,13 +1216,7 @@ const SocialLinkDialog = ({
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        if (open) resetForm()
-        onOpenChange(open)
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>

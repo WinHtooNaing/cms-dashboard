@@ -1,6 +1,10 @@
-import { Search } from "lucide-react"
+import { Search, X } from "lucide-react"
+
+import type { Role } from "@/types/roles"
 
 import { Input } from "@/components/ui/input"
+
+import { Button } from "@/components/ui/button"
 
 import {
   Select,
@@ -10,48 +14,82 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import type { Role } from "./types"
-
-type UsersToolbarProps = {
+interface UsersToolbarProps {
   search: string
+
   roleFilter: string
+
+  statusFilter: string
+
+  isActiveFilter: string
+
   roles: Role[]
+
   onSearchChange: (value: string) => void
+
   onRoleFilterChange: (value: string) => void
+
+  onStatusFilterChange: (value: string) => void
+  onClearFilters: () => void
+  onActiveFilterChange: (value: string) => void
 }
 
 export function UsersToolbar({
   search,
   roleFilter,
+  statusFilter,
+  isActiveFilter,
   roles,
   onSearchChange,
   onRoleFilterChange,
+  onStatusFilterChange,
+  onActiveFilterChange,
+  onClearFilters,
 }: UsersToolbarProps) {
+  const hasFilters =
+    search ||
+    roleFilter !== "ALL" ||
+    statusFilter !== "ALL" ||
+    isActiveFilter !== "ALL"
+
+  const clearFilters = () => {
+    onSearchChange("")
+    onRoleFilterChange("ALL")
+    onStatusFilterChange("ALL")
+    onActiveFilterChange("ALL")
+    onClearFilters()
+  }
+  const roleItems = [
+    { label: "All Roles", value: "ALL" },
+    ...roles.map((role) => ({
+      label: role.name,
+      value: role.id,
+    })),
+  ]
   return (
-    <div className="flex flex-col gap-2 sm:flex-row">
-      {/* Search */}
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
       <div className="relative">
         <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 
         <Input
-          placeholder="Search name or email..."
-          className="pl-9 sm:w-60"
+          placeholder="Search users..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full pl-9 sm:w-50"
         />
       </div>
 
-      {/* Role Filter */}
       <Select
+        items={roleItems}
         value={roleFilter}
-        onValueChange={(value) => onRoleFilterChange(value ?? "ALL")}
+        onValueChange={(value) => {
+          if (value !== null) {
+            onRoleFilterChange(value)
+          }
+        }}
       >
-        <SelectTrigger className="sm:w-40">
-          <SelectValue placeholder="Filter by role">
-            {roleFilter === "ALL"
-              ? "All Roles"
-              : roles.find((role) => role.id === roleFilter)?.name}
-          </SelectValue>
+        <SelectTrigger className="w-full sm:w-35">
+          <SelectValue placeholder="Filter role" />
         </SelectTrigger>
 
         <SelectContent>
@@ -64,6 +102,37 @@ export function UsersToolbar({
           ))}
         </SelectContent>
       </Select>
+
+      <Select
+        value={statusFilter}
+        onValueChange={(value) => {
+          if (value !== null) {
+            onStatusFilterChange(value)
+          }
+        }}
+      >
+        <SelectTrigger className="w-full sm:w-37.5">
+          <SelectValue placeholder="Account status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All Status</SelectItem>
+
+          <SelectItem value="ACTIVE">Active</SelectItem>
+
+          <SelectItem value="SUSPENDED">Suspended</SelectItem>
+
+          <SelectItem value="DEACTIVATED">Deactivated</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* ACTIVE FILTER */}
+
+      {hasFilters && (
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          <X className="mr-2 size-4" />
+          Clear
+        </Button>
+      )}
     </div>
   )
 }

@@ -1,11 +1,23 @@
-import { MoreHorizontal, Eye, Shield, Trash2 } from "lucide-react"
+import { MoreHorizontal, Eye, Shield, CircleSlash } from "lucide-react"
 
 import type { UsersTableProps } from "./types"
 
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import type { User, UserStatus } from "@/types/user"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import {
   Table,
   TableBody,
@@ -14,7 +26,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +47,11 @@ const roleStyles: Record<string, string> = {
   STAFF: "bg-blue-100 text-blue-700",
   CUSTOMER: "bg-green-100 text-green-700",
 }
-
+const statusStyles: Record<string, string> = {
+  ACTIVE: "bg-green-100 text-green-700 border-green-200",
+  SUSPENDED: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  DEACTIVATED: "bg-red-100 text-red-700 border-red-200",
+}
 function getInitials(name: string) {
   return name
     .split(" ")
@@ -42,15 +64,35 @@ function getInitials(name: string) {
 export function UsersTable({
   users,
   roles,
+  currentUserId,
   isPending,
   isError,
   error,
   page,
+  limit,
+  total,
   totalPages,
   onPageChange,
+  onLimitChange,
   onView,
   onAssignRole,
+  onUpdateStatus,
 }: UsersTableProps) {
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false)
+
+  const isActive = selectedUser?.status === "ACTIVE"
+
+  const nextStatus: UserStatus = isActive ? "DEACTIVATED" : "ACTIVE"
+
+  const handleConfirmStatusChange = () => {
+    if (!selectedUser) return
+
+    onUpdateStatus(selectedUser, nextStatus)
+    setStatusDialogOpen(false)
+    setSelectedUser(null)
+  }
   return (
     <>
       <div className="overflow-x-auto">
@@ -59,6 +101,7 @@ export function UsersTable({
             <TableRow>
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Permissions</TableHead>
               <TableHead>Joined Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -67,11 +110,11 @@ export function UsersTable({
 
           <TableBody>
             {isPending ? (
-              <UsersTableSkeleton rowCount={5} />
+              <UsersTableSkeleton rowCount={6} />
             ) : isError ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-32 text-center text-destructive"
                 >
                   Failed to load users: {error?.message}
@@ -79,6 +122,7 @@ export function UsersTable({
               </TableRow>
             ) : users.length > 0 ? (
               users.map((user) => {
+                const isCurrentUser = user.id === currentUserId
                 const role = roles.find((item) => item.id === user.roleId)
 
                 return (
@@ -113,7 +157,18 @@ export function UsersTable({
                         {user.role.name}
                       </Badge>
                     </TableCell>
-
+                    {/* Status */}
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          statusStyles[user.status] ??
+                          "bg-gray-100 text-gray-700"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
                     {/* Permissions */}
                     <TableCell>
                       <span className="text-sm">
@@ -143,20 +198,49 @@ export function UsersTable({
                             View Details
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={() => onAssignRole(user)}>
+                          <DropdownMenuSeparator />
+
+                          <DropdownMenuItem
+                            disabled={isCurrentUser}
+                            onClick={() => {
+                              if (!isCurrentUser) {
+                                onAssignRole(user)
+                              }
+                            }}
+                          >
                             <Shield className="mr-2 size-4" />
                             Assign Role
                           </DropdownMenuItem>
 
-                          <DropdownMenuSeparator />
-
                           <DropdownMenuItem
-                            disabled
-                            className="text-destructive focus:text-destructive"
+                            disabled={isCurrentUser}
+                            className={
+                              user.status === "ACTIVE"
+                                ? "text-destructive focus:text-destructive"
+                                : "text-green-600 focus:text-green-600"
+                            }
+                            onClick={() => {
+                              if (!isCurrentUser) {
+                                setSelectedUser(user)
+                                setStatusDialogOpen(true)
+                              }
+                            }}
                           >
-                            <Trash2 className="mr-2 size-4" />
-                            Delete User
+                            <CircleSlash className="mr-2 size-4" />
+
+                            {user.status === "ACTIVE"
+                              ? "Deactivate"
+                              : "Activate"}
                           </DropdownMenuItem>
+
+                          {isCurrentUser && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem disabled>
+                                You cannot modify your own account
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -177,32 +261,104 @@ export function UsersTable({
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Page {page} of {totalPages}
-        </p>
+      {/* PAGINATION */}
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1 || isPending}
-            onClick={() => onPageChange(page - 1)}
-          >
-            Previous
-          </Button>
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* RESULTS INFORMATION */}
 
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages || isPending}
-            onClick={() => onPageChange(page + 1)}
-          >
-            Next
-          </Button>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span>Showing</span>
+
+          <span className="font-medium text-foreground">
+            {total === 0 ? 0 : (page - 1) * limit + 1}
+            {" - "}
+            {Math.min(page * limit, total)}
+          </span>
+
+          <span>of {total} users</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          {/* PAGE SIZE */}
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              Rows per page
+            </span>
+
+            <Select value={String(limit)} onValueChange={onLimitChange}>
+              <SelectTrigger className="w-18.75">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="8">8</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* PAGE NAVIGATION */}
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isPending}
+              onClick={() => onPageChange(page - 1)}
+            >
+              Previous
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages || isPending || totalPages === 0}
+              onClick={() => onPageChange(page + 1)}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
+      <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isActive ? "Deactivate User?" : "Activate User?"}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {isActive
+                ? `Are you sure you want to deactivate ${selectedUser?.name}'s account? They will no longer be able to access their account.`
+                : `Are you sure you want to activate ${selectedUser?.name}'s account? They will regain access to their account.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleConfirmStatusChange}
+              className={
+                isActive
+                  ? "text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                  : ""
+              }
+            >
+              {isActive ? "Deactivate" : "Activate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

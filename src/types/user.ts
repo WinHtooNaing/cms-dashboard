@@ -1,4 +1,7 @@
-export type UserRole = "ADMIN" | "STAFF" | "CUSTOMER" | string
+
+export type UserRole = "ADMIN" | "STAFF" | "CUSTOMER" | (string & {})
+
+export type UserStatus = "ACTIVE" | "SUSPENDED" | "DEACTIVATED"
 
 export type User = {
   id: string
@@ -7,7 +10,7 @@ export type User = {
   phone: string | null
   roleId: string
   isActive: boolean
-  status: "ACTIVE" | "INACTIVE" | string
+  status: UserStatus
   createdAt: string
   updatedAt: string
 
@@ -35,9 +38,19 @@ export type GetUsersParams = {
   limit?: number
   search?: string
   roleId?: string
-  role?: string
-  status?: string
+  role?: UserRole
+  status?: UserStatus
   isActive?: boolean
-  sortBy?: string
+  sortBy?: "createdAt" | "updatedAt" | "name" | "email"
   sortOrder?: "asc" | "desc"
 }
+
+export type CreateUserPayload = {
+  name: string
+  email: string
+  phone: string
+  password: string
+  roleId: string
+}
+
+export type CreatedUser = User

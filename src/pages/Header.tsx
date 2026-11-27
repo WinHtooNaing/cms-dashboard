@@ -1,7 +1,9 @@
 import { FileImage, ImageIcon, LoaderCircle } from "lucide-react"
 
 import { useEffect, useRef, useState } from "react"
+
 import { useForm } from "react-hook-form"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import {
@@ -21,15 +23,22 @@ import { headerSchema, type HeaderFormValues } from "@/schemas/headerSchema"
 
 import { useHeaderLogo } from "@/hooks/cms/useHeaderLogo"
 import { useUpdateHeaderLogo } from "@/hooks/cms/useUpdateHeaderLogo"
+import LogoCropDialog from "@/components/navbar/LogoCropDialog"
 
-const REQUIRED_WIDTH = 150
-const REQUIRED_HEIGHT = 50
+const REQUIRED_WIDTH = 900
+const REQUIRED_HEIGHT = 300
 
 const Header = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
+
   const previewUrlRef = useRef<string | null>(null)
+  const cropSourceUrlRef = useRef<string | null>(null)
 
   const [previewLogo, setPreviewLogo] = useState<string | null>(null)
+
+  const [cropSource, setCropSource] = useState<string | null>(null)
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false)
+
   const [fileName, setFileName] = useState("No file selected")
 
   const {
@@ -67,14 +76,20 @@ const Header = () => {
 
   const currentLogo = headerSection?.imageUrl ?? DEFAULT_LOGO
 
+  // Cleanup object URLs
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) {
         URL.revokeObjectURL(previewUrlRef.current)
       }
+
+      if (cropSourceUrlRef.current) {
+        URL.revokeObjectURL(cropSourceUrlRef.current)
+      }
     }
   }, [])
 
+  // Clear selected preview
   const clearPreview = () => {
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current)
@@ -84,34 +99,84 @@ const Header = () => {
     setPreviewLogo(null)
   }
 
-  const handleLogoChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // Clear crop source
+  const clearCropSource = () => {
+    if (cropSourceUrlRef.current) {
+      URL.revokeObjectURL(cropSourceUrlRef.current)
+      cropSourceUrlRef.current = null
+    }
+
+    setCropSource(null)
+  }
+
+  // Select Original Image
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
 
     if (!file) return
 
+    // Basic file validation before opening crop dialog
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"]
+
+    if (!allowedTypes.includes(file.type)) {
+      clearErrors("logoFile")
+
+      setValue("logoFile", undefined as never)
+
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setValue("logoFile", undefined as never)
+
+      return
+    }
+
+    clearCropSource()
+
+    const imageUrl = URL.createObjectURL(file)
+
+    cropSourceUrlRef.current = imageUrl
+
+    setCropSource(imageUrl)
+
+    setIsCropDialogOpen(true)
+  }
+
+  // Apply Cropped Image
+  const handleApplyCrop = async (croppedFile: File) => {
     clearPreview()
 
     clearErrors("logoFile")
 
-    setValue("logoFile", file, {
+    const imageUrl = URL.createObjectURL(croppedFile)
+
+    previewUrlRef.current = imageUrl
+
+    setPreviewLogo(imageUrl)
+
+    setFileName(croppedFile.name)
+
+    setValue("logoFile", croppedFile, {
       shouldDirty: true,
       shouldValidate: false,
     })
 
-    setFileName(file.name)
-
-    const imageUrl = URL.createObjectURL(file)
-
-    previewUrlRef.current = imageUrl
-    setPreviewLogo(imageUrl)
-
     await trigger("logoFile")
+
+    clearCropSource()
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
+  // Cancel Selection
   const handleCancel = () => {
     clearPreview()
+    clearCropSource()
+
+    setIsCropDialogOpen(false)
 
     setFileName("No file selected")
 
@@ -124,6 +189,7 @@ const Header = () => {
     }
   }
 
+  // Save Logo
   const handleSaveLogo = async () => {
     if (!selectedFile || !headerSection) return
 
@@ -134,6 +200,9 @@ const Header = () => {
       })
 
       handleCancel()
+
+      // Refresh current logo from API
+      await refetch()
     } catch (error) {
       console.error("Logo upload failed:", error)
     }
@@ -143,6 +212,7 @@ const Header = () => {
 
   return (
     <div className="min-h-screen space-y-8 bg-background pt-4 text-foreground sm:pt-6">
+      {/* Page Header */}
       <div className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -156,11 +226,11 @@ const Header = () => {
 
         <div className="flex w-fit items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm">
           <span className="h-2 w-2 rounded-full bg-primary" />
-
           <span className="text-muted-foreground">Logo Settings</span>
         </div>
       </div>
 
+      {/* Error State */}
       {isError && (
         <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-destructive">
@@ -176,6 +246,7 @@ const Header = () => {
       )}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        {/* Logo Upload Card */}
         <Card className="overflow-hidden">
           <CardHeader className="border-b bg-muted/30">
             <div className="flex items-start gap-3">
@@ -187,22 +258,23 @@ const Header = () => {
                 <CardTitle className="text-xl">Website Logo</CardTitle>
 
                 <CardDescription>
-                  Select an image and check whether it meets the logo
-                  requirements.
+                  Select an image, crop it, and preview your website logo.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6 p-5 sm:p-6">
+            {/* Preview Header */}
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold">Logo Preview</h3>
 
               <span className="rounded-md border bg-muted/50 px-2 py-1 text-xs text-muted-foreground">
-                {previewLogo ? "Selected Image" : "No Image Selected"}
+                {previewLogo ? "Cropped Image" : "No Image Selected"}
               </span>
             </div>
 
+            {/* Hidden File Input */}
             <Input
               {...fileInputProps}
               ref={(element) => {
@@ -216,10 +288,11 @@ const Header = () => {
               id="logo-upload"
             />
 
+            {/* Choose Image Button */}
             <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isValidating || isUploading || isLoading}
+              disabled={isUploading || isLoading}
               className="group relative flex min-h-52 w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed bg-muted/20 p-6 transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-70"
               aria-label="Choose a website logo"
             >
@@ -232,7 +305,7 @@ const Header = () => {
                   <img
                     src={displayedPreview}
                     alt="Selected website logo preview"
-                    className="h-auto max-h-32 w-auto max-w-full rounded-3xl object-contain"
+                    className="h-auto max-h-32 w-auto max-w-full rounded-lg object-contain"
                   />
                 )}
 
@@ -252,10 +325,15 @@ const Header = () => {
                   <p className="text-xs text-muted-foreground">
                     PNG, JPG, or WebP · Maximum 5 MB
                   </p>
+
+                  <p className="text-xs text-primary">
+                    Crop and zoom your image before uploading.
+                  </p>
                 </div>
               </div>
             </Button>
 
+            {/* Validation Error */}
             {errors.logoFile && (
               <div
                 role="alert"
@@ -277,6 +355,7 @@ const Header = () => {
               </div>
             )}
 
+            {/* Selected File Information */}
             <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                 <FileImage className="h-5 w-5" />
@@ -293,6 +372,7 @@ const Header = () => {
               </div>
             </div>
 
+            {/* Actions */}
             <div className="flex justify-end gap-1.5 border-t pt-5">
               <Button
                 type="button"
@@ -326,6 +406,7 @@ const Header = () => {
           </CardContent>
         </Card>
 
+        {/* Current Logo Card */}
         <Card className="overflow-hidden">
           <CardHeader className="border-b bg-muted/30">
             <CardTitle className="text-lg">Current Logo</CardTitle>
@@ -354,6 +435,24 @@ const Header = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Logo Crop Dialog */}
+      <LogoCropDialog
+        open={isCropDialogOpen}
+        imageSrc={cropSource}
+        onOpenChange={(open) => {
+          setIsCropDialogOpen(open)
+
+          if (!open) {
+            clearCropSource()
+
+            if (fileInputRef.current) {
+              fileInputRef.current.value = ""
+            }
+          }
+        }}
+        onApplyCrop={handleApplyCrop}
+      />
     </div>
   )
 }
