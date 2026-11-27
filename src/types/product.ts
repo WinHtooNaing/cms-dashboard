@@ -18,43 +18,28 @@ export interface ProductStock {
 
 export interface Product {
   id: string
-  categoryId?: string
-  brandId: string
+  categoryId?: string | null
+  brandId?: string | null
+
   name: string
   slug: string
   sku: string
   description: string
   price: string
 
-  
   originalPrice?: string | null
   discountPercentage?: number | null
 
   imageUrl: string | null
   imagePublicId: string | null
   isActive: boolean
+
   createdAt: string
   updatedAt: string
 
-  brand?: {
-    id: string
-    name: string
-    slug: string
-    imageUrl: string | null
-  }
-
-  category?: {
-    id: string
-    name: string
-    slug: string
-    imageUrl: string | null
-  } | null
-
-  stock?: {
-    availableQuantity: number
-    inStock: boolean
-    updatedAt?: string
-  } | null
+  brand?: Brand | null
+  category?: ProductCategory | null
+  stock?: ProductStock | null
 }
 
 export interface ProductPagination {
@@ -70,12 +55,16 @@ export interface ProductListResponse {
 }
 
 export interface ProductQueryParams {
+  
   page?: number
   limit?: number
   sortBy?: string
   sortOrder?: "asc" | "desc"
+  search?: string
   categoryId?: string
+  brandId?: string
+  brandSlug?: string
+  hasDiscount?: boolean
   minPrice?: number
   maxPrice?: number
-  search?: string
 }

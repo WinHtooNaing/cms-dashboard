@@ -29,7 +29,8 @@ api.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error.config as
-      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined
 
     if (!originalRequest) {
       return Promise.reject(error)
@@ -37,17 +38,21 @@ api.interceptors.response.use(
 
     const requestUrl = originalRequest.url ?? ""
 
-    if (
+    // Don't refresh tokens for login or refresh requests.
+    const isAuthRequest =
       requestUrl.includes("/auth/login") ||
       requestUrl.includes("/auth/refresh")
-    ) {
+
+    if (isAuthRequest) {
       return Promise.reject(error)
     }
 
+    // Only handle unauthorized errors.
     if (error.response?.status !== 401) {
       return Promise.reject(error)
     }
 
+    // Prevent infinite retry loops.
     if (originalRequest._retry) {
       return Promise.reject(error)
     }
@@ -79,7 +84,6 @@ api.interceptors.response.use(
       refreshPromise = null
 
       clearAuthStorage()
-
       window.location.href = "/login"
 
       return Promise.reject(refreshError)

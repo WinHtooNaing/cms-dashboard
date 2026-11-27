@@ -325,10 +325,6 @@ const Header = () => {
                   <p className="text-xs text-muted-foreground">
                     PNG, JPG, or WebP · Maximum 5 MB
                   </p>
-
-                  <p className="text-xs text-primary">
-                    Crop and zoom your image before uploading.
-                  </p>
                 </div>
               </div>
             </Button>
